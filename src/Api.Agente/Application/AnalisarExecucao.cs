@@ -21,10 +21,16 @@ public sealed class AnalisarExecucao(ValidadorEntrada validador, ClassificadorDe
         };
         execucao.ValidacoesNaoRealizadas.Add("layout de item não registrado");
 
-        var textos = Textos(pedido.Entrada);
-        for (var i = 0; i < textos.Count; i++)
+        var itens = Itens(pedido.Entrada);
+        for (var i = 0; i < itens.Count; i++)
         {
-            execucao.Itens.Add(await classificador.ClassificarAsync((i + 1).ToString(), textos[i], pedido.DataVigencia, ct));
+            var classificado = await classificador.ClassificarAsync((i + 1).ToString(), itens[i].Descricao!.Trim(), pedido.DataVigencia, ct);
+            if (pedido.Intencao == IntencaoAnalise.AuditarDeclarado)
+            {
+                ComparadorDeclaracao.Aplicar(classificado, itens[i].NcmDeclarada, itens[i].TributosDeclarados);
+            }
+
+            execucao.Itens.Add(classificado);
         }
 
         execucao.EstadoNota = CalculadoraEstadoNota.Calcular(execucao.Itens);
@@ -43,14 +49,14 @@ public sealed class AnalisarExecucao(ValidadorEntrada validador, ClassificadorDe
 
     public Task<Execucao?> ObterAsync(Guid execucaoId, CancellationToken ct) => repositorio.ObterAsync(execucaoId, ct);
 
-    private static List<string> Textos(EntradaPedido entrada)
+    private static List<ItemPedido> Itens(EntradaPedido entrada)
     {
-        var itens = entrada.Itens.Where(i => !string.IsNullOrWhiteSpace(i.Descricao)).Select(i => i.Descricao!.Trim()).ToList();
+        var itens = entrada.Itens.Where(i => !string.IsNullOrWhiteSpace(i.Descricao)).ToList();
         if (itens.Count > 0)
         {
             return itens;
         }
 
-        return [entrada.Texto!.Trim()];
+        return [new ItemPedido { Descricao = entrada.Texto!.Trim() }];
     }
 }

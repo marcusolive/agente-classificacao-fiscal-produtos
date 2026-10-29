@@ -33,6 +33,8 @@ public sealed class ArquivoPedido
 public sealed class ItemPedido
 {
     public string? Descricao { get; set; }
+    public string? NcmDeclarada { get; set; }
+    public Dictionary<string, string>? TributosDeclarados { get; set; }
 }
 
 public sealed class EntradaRejeitadaException(string message) : Exception(message);
