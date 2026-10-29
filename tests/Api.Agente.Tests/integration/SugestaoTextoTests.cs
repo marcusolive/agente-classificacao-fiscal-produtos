@@ -64,14 +64,14 @@ public class SugestaoTextoTests : IClassFixture<FabricaApi>
     public async Task Contexto_incompleto_e_recusado()
     {
         var cliente = _fabrica.CreateClient();
-        var resposta = await cliente.PostAsJsonAsync("/analises", new { entrada = new { tipo = "texto", texto = "x" } });
+        var resposta = await cliente.PostAsJsonAsync("/v1/analises", new { entrada = new { tipo = "texto", texto = "x" } });
         Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
     }
 
     private async Task<JsonElement> PostAsync(string texto)
     {
         var cliente = _fabrica.CreateClient();
-        var resposta = await cliente.PostAsJsonAsync("/analises", new
+        var resposta = await cliente.PostAsJsonAsync("/v1/analises", new
         {
             usuario = "ana",
             empresa = "empresa-1",

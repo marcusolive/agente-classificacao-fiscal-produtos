@@ -4,6 +4,7 @@ using Api.Agente.Application;
 using Api.Agente.Domain;
 using Api.Agente.Endpoints;
 using Api.Agente.Infrastructure;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<OpcoesAnalise>(builder.Configuration.GetSection("Analise"));
@@ -37,9 +38,60 @@ else
     builder.Services.AddSingleton<IRepositorioExecucao, RepositorioExecucaoMemoria>();
 }
 
+builder.Services.AddSingleton<RegistroDeLayouts>();
 builder.Services.AddSingleton<ValidadorEntrada>();
 builder.Services.AddSingleton<ClassificadorDeItem>();
 builder.Services.AddSingleton<AnalisarExecucao>();
+builder.Services.AddOpenApi(ContratoApi.Documento, options =>
+{
+    options.AddDocumentTransformer((documento, _, _) =>
+    {
+        documento.Info ??= new OpenApiInfo();
+        documento.Info.Title = ContratoApi.Titulo;
+        documento.Info.Version = ContratoApi.Versao;
+        documento.Info.Description = ContratoApi.Descricao;
+        documento.Servers = [new OpenApiServer { Url = "/" }];
+        return Task.CompletedTask;
+    });
+    options.AddOperationTransformer((operacao, _, _) =>
+    {
+        if (operacao.Responses is not null)
+        {
+            foreach (var resposta in operacao.Responses)
+            {
+                if (resposta.Value is not OpenApiResponse corpo)
+                {
+                    continue;
+                }
+
+                corpo.Description = (operacao.OperationId, resposta.Key) switch
+                {
+                    ("CriarAnaliseV1", "200") => "Análise processada. O estado da nota pode ser bloqueio, pendência, falha ou sugestão liberada.",
+                    ("CriarAnaliseV1", "400") => "Contexto ausente, tipo não aceito, arquivo vazio, arquivo sem limite ou layout não registrado. Não há bloqueio fiscal.",
+                    ("ObterAnaliseV1", "200") => "Execução encontrada no contrato 1.0.0.",
+                    ("ObterAnaliseV1", "404") => "Execução não encontrada.",
+                    _ => corpo.Description
+                };
+            }
+        }
+
+        if (operacao.Parameters is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        foreach (var parametro in operacao.Parameters)
+        {
+            if (parametro is OpenApiParameter caminho && caminho.Name == "execucaoId")
+            {
+                caminho.Description = "Identificador devolvido na criação da análise.";
+            }
+        }
+
+        return Task.CompletedTask;
+    });
+    options.AddSchemaTransformer(DocumentacaoDeSchema.Transformar);
+});
 
 var app = builder.Build();
 if (!testando && !string.IsNullOrWhiteSpace(conexao))
@@ -48,6 +100,12 @@ if (!testando && !string.IsNullOrWhiteSpace(conexao))
     await postgres.GarantirEsquemaAsync(CancellationToken.None);
 }
 
+app.MapOpenApi();
+app.MapSwaggerUI("/swagger", options =>
+{
+    options.SwaggerEndpoint($"/openapi/{ContratoApi.Documento}.json", $"{ContratoApi.Titulo} {ContratoApi.Versao}");
+    options.DocumentTitle = $"{ContratoApi.Titulo} {ContratoApi.Versao}";
+});
 AnalisesEndpoints.Mapear(app);
 app.Run();
 

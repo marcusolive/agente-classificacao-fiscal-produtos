@@ -71,7 +71,7 @@ public class BloqueioNotaTests : IClassFixture<FabricaApi>
     private async Task<JsonElement> AuditarAsync(object[] itens)
     {
         var cliente = _fabrica.CreateClient();
-        var resposta = await cliente.PostAsJsonAsync("/analises", new
+        var resposta = await cliente.PostAsJsonAsync("/v1/analises", new
         {
             usuario = "ana",
             empresa = "empresa-1",

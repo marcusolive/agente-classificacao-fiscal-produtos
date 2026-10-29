@@ -1,195 +1,495 @@
-openapi: 3.0.3
+openapi: '3.1.1'
 info:
-  title: Execução da análise fiscal de itens
+  title: Agente de classificação fiscal de produtos
+  description: 'Contrato 1.0.0 da análise fiscal de itens. Sugere NCM e tratamento, audita o declarado e pode bloquear a nota. Não atesta conformidade fiscal. Uma mudança incompatível deste contrato será publicada como v2.'
   version: 1.0.0
-  description: >
-    Envelope da API de análise. O JSON do modelo é interno e não é esta resposta.
-    Identificador, versões, estado da nota e metadados operacionais são preenchidos pelo sistema.
 servers:
   - url: /
 paths:
-  /analises:
+  /v1/analises:
     post:
-      operationId: criarAnalise
-      summary: Executa a análise e devolve o resultado.
+      tags:
+        - Análises v1
+      summary: Executa a análise dos itens.
+      description: 'Recebe o contexto fiscal e os itens. Devolve sugestão, divergência ou bloqueio da nota no contrato 1.0.0. Contexto incompleto, tipo não aceito ou arquivo sem limite configurado responde 400 e não classifica.'
+      operationId: CriarAnaliseV1
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PedidoAnalise'
+        required: true
       responses:
         '200':
-          description: Análise processada. O estado da nota pode ser bloqueio, pendência, falha ou sugestão liberada.
+          description: 'Análise processada. O estado da nota pode ser bloqueio, pendência, falha ou sugestão liberada.'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResultadoAnalise'
+                $ref: '#/components/schemas/Execucao'
         '400':
-          description: Contexto ausente, tipo de entrada não aceito ou arquivo recusado antes da análise.
-  /analises/{execucaoId}:
+          description: 'Contexto ausente, tipo não aceito, arquivo vazio, arquivo sem limite ou layout não registrado. Não há bloqueio fiscal.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResposta'
+  '/v1/analises/{execucaoId}':
     get:
-      operationId: obterAnalise
-      summary: Recupera o resultado persistido.
+      tags:
+        - Análises v1
+      summary: Recupera uma análise já executada.
+      description: Devolve o mesmo contrato 1.0.0 gravado na execução. O identificador é o execucaoId retornado na criação.
+      operationId: ObterAnaliseV1
       parameters:
         - name: execucaoId
           in: path
+          description: Identificador devolvido na criação da análise.
           required: true
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: Execução encontrada.
+          description: Execução encontrada no contrato 1.0.0.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResultadoAnalise'
+                $ref: '#/components/schemas/Execucao'
         '404':
           description: Execução não encontrada.
 components:
   schemas:
-    PedidoAnalise:
-      type: object
-      required: [usuario, empresa, papel, finalidade, uf, regimeTributario, tipoOperacao, dataVigencia, intencao, entrada]
-      properties:
-        usuario: { type: string }
-        empresa: { type: string }
-        papel: { type: string }
-        finalidade: { type: string }
-        uf: { type: string }
-        regimeTributario: { type: string }
-        tipoOperacao: { type: string }
-        dataVigencia: { type: string, format: date }
-        intencao:
-          type: string
-          enum: [sugerirNcm, auditarDeclarado, sugerirTratamento, sugerirXmlItem]
-        entrada:
-          $ref: '#/components/schemas/EntradaAnalise'
-    EntradaAnalise:
-      type: object
-      required: [tipo]
-      properties:
-        tipo:
-          type: string
-          enum: [texto, xmlNfe, planilha, pdf, laudo, fichaTecnica]
-        texto: { type: string }
-        arquivo:
-          type: object
-          description: Presente quando a entrada não é só texto. O layout interno do arquivo não faz parte deste contrato.
-          properties:
-            nome: { type: string }
-            conteudoBase64: { type: string }
-        itens:
-          type: array
-          items:
-            $ref: '#/components/schemas/ItemInformado'
-    ItemInformado:
-      type: object
-      properties:
-        descricao: { type: string }
-        unidade: { type: string }
-        quantidade: { type: string }
-        ncmDeclarada: { type: string }
-        cestDeclarado: { type: string }
-        cfop: { type: string }
-        cst: { type: string }
-        uf: { type: string }
-        regimeTributario: { type: string }
-        origem: { type: string }
-        destino: { type: string }
-        tipoOperacao: { type: string }
-        dataVigencia: { type: string, format: date }
-    ResultadoAnalise:
-      type: object
-      required: [contratoVersao, execucaoId, versaoAgente, estadoNota, itens]
-      properties:
-        contratoVersao: { type: string, example: '1.0.0' }
-        execucaoId: { type: string, format: uuid }
-        versaoAgente: { type: string }
-        versoesBases:
-          type: array
-          items:
-            type: object
-            required: [base, versao]
-            properties:
-              base: { type: string }
-              versao: { type: string }
-        estadoNota:
-          type: string
-          enum: [bloqueada, pendenteDeDado, falhaTecnica, sugestaoLiberada]
-        itens:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResultadoItem'
-        validacoesNaoRealizadas:
-          type: array
-          items: { type: string }
-    ResultadoItem:
-      type: object
-      required: [itemId, situacao, revisaoHumana, impactoRelevante]
-      properties:
-        itemId: { type: string }
-        textoOriginal: { type: string }
-        situacao:
-          type: string
-          enum: [sugerido, divergente, dadoAusente, semEvidencia, falhaTecnica]
-        revisaoHumana: { type: boolean }
-        impactoRelevante: { type: boolean, description: Permanece falso até a definição de impacto relevante. }
-        confianca:
-          type: integer
-          minimum: 0
-          maximum: 100
-          nullable: true
-        ncmSugerida: { type: string, nullable: true }
-        alternativas:
-          type: array
-          items: { type: string }
-        incorreto: { type: string, nullable: true }
-        tratamento:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/ValorOuLimitacao'
-        xmlItem: { type: string, nullable: true }
-        dadoAusente:
-          type: array
-          items: { type: string }
-        evidencias:
-          type: array
-          items:
-            $ref: '#/components/schemas/Evidencia'
-        achados:
-          type: array
-          items:
-            $ref: '#/components/schemas/Achado'
-    ValorOuLimitacao:
-      type: object
-      required: [situacao]
-      properties:
-        situacao:
-          type: string
-          enum: [sustentado, limitacao]
-        valor: { type: string, nullable: true }
-        motivo: { type: string, nullable: true }
-    Evidencia:
-      type: object
-      required: [fonte, faixaAutoridade, vigencia]
-      properties:
-        fonte: { type: string }
-        faixaAutoridade:
-          type: string
-          enum: [legislacaoVigente, notasRgi, casoCorporativoConfirmado, textoFornecedor]
-        trecho: { type: string, nullable: true }
-        localizacao: { type: string, nullable: true }
-        vigencia: { type: string, format: date }
     Achado:
+      required:
+        - descricao
       type: object
-      required: [classe, severidade, descricao]
       properties:
         classe:
-          type: string
-          enum: [erroEstrutural, inconsistenciaNegocio, indicioIa, ausenciaEvidencias, falhaTecnica]
+          description: Classe do achado.
+          $ref: '#/components/schemas/ClasseAchado'
         severidade:
+          description: erro ou aviso.
+          $ref: '#/components/schemas/SeveridadeAchado'
+        descricao:
           type: string
-          enum: [erro, aviso]
-        descricao: { type: string }
+          description: Descrição objetiva do achado.
+      description: Registro de um achado da execução.
+    ArquivoPedido:
+      type: object
+      properties:
+        nome:
+          type:
+            - 'null'
+            - string
+          description: Nome original do arquivo.
+        conteudoBase64:
+          type:
+            - 'null'
+            - string
+          description: Conteúdo do arquivo em Base64.
+      description: Arquivo em Base64. Exigido quando o tipo não é texto.
+    AtributosProduto:
+      type: object
+      properties:
+        funcao:
+          type:
+            - 'null'
+            - string
+          description: Função do produto. Essencial para classificar.
+        material:
+          type:
+            - 'null'
+            - string
+          description: Material informado no texto.
+        composicao:
+          type:
+            - 'null'
+            - string
+          description: Composição do produto. Essencial para classificar.
+        uso:
+          type:
+            - 'null'
+            - string
+          description: Uso informado no texto.
+        apresentacao:
+          type:
+            - 'null'
+            - string
+          description: Apresentação do produto. Essencial para classificar.
+        termosTecnicos:
+          type:
+            - 'null'
+            - string
+          description: Termos técnicos encontrados no texto.
+      description: Atributos extraídos do texto do item.
+    ClasseAchado:
+      enum:
+        - erroEstrutural
+        - inconsistenciaNegocio
+        - indicioIa
+        - ausenciaEvidencias
+        - falhaTecnica
+      description: Classe do achado.
+    EntradaPedido:
+      type: object
+      properties:
+        tipo:
+          description: 'texto, xmlNfe, planilha, pdf, laudo ou fichaTecnica.'
+          $ref: '#/components/schemas/TipoEntrada'
+        texto:
+          type:
+            - 'null'
+            - string
+          description: Descrição do produto quando a entrada é texto e não há lista de itens.
+        arquivo:
+          oneOf:
+            - type: 'null'
+            - description: Arquivo em Base64. Exigido quando o tipo não é texto.
+              $ref: '#/components/schemas/ArquivoPedido'
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemPedido'
+          description: Itens já separados. Cada item precisa de descrição.
+      description: 'Texto, arquivo ou lista de itens a analisar.'
+    ErroResposta:
+      required:
+        - erro
+      type: object
+      properties:
+        erro:
+          type: string
+          description: 'Motivo objetivo da recusa, antes de qualquer classificação.'
+        classe:
+          oneOf:
+            - type: 'null'
+            - description: erroEstrutural quando o documento não pode ser lido. Ausente quando a recusa é só condição de processamento.
+              $ref: '#/components/schemas/ClasseAchado'
+    EstadoNota:
+      enum:
+        - bloqueada
+        - pendenteDeDado
+        - falhaTecnica
+        - sugestaoLiberada
+      description: 'bloqueada, pendenteDeDado, falhaTecnica ou sugestaoLiberada.'
+    Evidencia:
+      required:
+        - fonte
+      type: object
+      properties:
+        fonte:
+          type: string
+          description: Nome da fonte consultada.
+        faixaAutoridade:
+          description: Faixa de autoridade usada para ordenar a evidência.
+          $ref: '#/components/schemas/FaixaAutoridade'
+        trecho:
+          type:
+            - 'null'
+            - string
+          description: 'Trecho citado. Sem trecho, a evidência não vence.'
+        localizacao:
+          type:
+            - 'null'
+            - string
+          description: Onde o trecho foi localizado na fonte.
+        vigencia:
+          type: string
+          description: Vigência da evidência.
+          format: date
+        ncm:
+          type:
+            - 'null'
+            - string
+          description: NCM presente nesta evidência.
+        tributos:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Tratamentos presentes nesta evidência, por tributo.'
+      description: Trecho recuperado e usado como evidência. Não é instrução do sistema.
+    Execucao:
+      required:
+        - usuario
+        - empresa
+        - papel
+        - finalidade
+        - uf
+        - regimeTributario
+        - tipoOperacao
+      type: object
+      properties:
+        execucaoId:
+          type: string
+          description: Identificador da execução. Use-o para consultar o resultado.
+          format: uuid
+        contratoVersao:
+          type: string
+          description: Versão deste contrato. O valor atual é 1.0.0.
+        usuario:
+          type: string
+          description: Usuário que solicitou a análise.
+        empresa:
+          type: string
+          description: Empresa da execução.
+        papel:
+          type: string
+          description: Papel do solicitante.
+        finalidade:
+          type: string
+          description: Finalidade informada no pedido.
+        uf:
+          type: string
+          description: UF do contexto.
+        regimeTributario:
+          type: string
+          description: Regime tributário do contexto.
+        tipoOperacao:
+          type: string
+          description: Tipo de operação do contexto.
+        dataVigencia:
+          type: string
+          description: Data de vigência usada na consulta.
+          format: date
+        intencao:
+          description: 'Intenção pedida: sugerir ou auditar.'
+          $ref: '#/components/schemas/IntencaoAnalise'
+        versaoAgente:
+          type: string
+          description: Versão do agente que produziu o resultado.
+        estadoNota:
+          description: 'bloqueada, pendenteDeDado, falhaTecnica ou sugestaoLiberada.'
+          $ref: '#/components/schemas/EstadoNota'
+        itens:
+          type:
+            - 'null'
+            - array
+          items:
+            $ref: '#/components/schemas/ItemAnalise'
+          description: Resultado de cada item. Um item incompleto não impede os demais.
+        validacoesNaoRealizadas:
+          type:
+            - 'null'
+            - array
+          items:
+            type: string
+          description: Checagens que esta versão ainda não executa.
+        versoesBases:
+          type:
+            - 'null'
+            - array
+          items:
+            $ref: '#/components/schemas/VersaoBase'
+          description: Versões das bases citadas nesta execução.
+      description: Resultado da execução no contrato 1.0.0.
+    FaixaAutoridade:
+      enum:
+        - legislacaoVigente
+        - notasRgi
+        - casoCorporativoConfirmado
+        - textoFornecedor
+      description: Faixa de autoridade usada para ordenar a evidência.
+    IntencaoAnalise:
+      enum:
+        - sugerirNcm
+        - auditarDeclarado
+        - sugerirTratamento
+        - sugerirXmlItem
+      description: 'Intenção pedida: sugerir ou auditar.'
+    ItemAnalise:
+      required:
+        - itemId
+        - textoOriginal
+      type: object
+      properties:
+        itemId:
+          type: string
+          description: Identificador do item nesta execução.
+        textoOriginal:
+          type: string
+          description: Texto original usado na classificação.
+        atributos:
+          description: Atributos extraídos do texto do item.
+          $ref: '#/components/schemas/AtributosProduto'
+        situacao:
+          description: 'sugerido, divergente, dadoAusente, semEvidencia ou falhaTecnica.'
+          $ref: '#/components/schemas/SituacaoItem'
+        revisaoHumana:
+          type: boolean
+          description: Verdadeiro quando a sugestão precisa de revisão humana.
+        impactoRelevante:
+          type: boolean
+          description: Reservado. Permanece falso enquanto o critério de impacto não estiver definido.
+        confianca:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - 'null'
+            - integer
+            - string
+          description: Confiança de 0 a 100. Nula quando não há vencedor único.
+          format: int32
+        ncmSugerida:
+          type:
+            - 'null'
+            - string
+          description: NCM sustentada pelas evidências. Não é certificação.
+        alternativas:
+          type:
+            - 'null'
+            - array
+          items:
+            type: string
+          description: 'Outros códigos encontrados nas evidências, sem vencer a ordenação.'
+        incorreto:
+          type:
+            - 'null'
+            - string
+          description: Campo declarado que a auditoria considerou divergente.
+        tratamento:
+          type:
+            - 'null'
+            - object
+          additionalProperties:
+            $ref: '#/components/schemas/ValorTratamento'
+          description: 'Tratamento por tributo: ipi, icms, cest, pis, cofins e ibsCbs.'
+        xmlItem:
+          type:
+            - 'null'
+            - string
+          description: 'XML somente do item, quando a intenção pede esse trecho.'
+        dadoAusente:
+          type:
+            - 'null'
+            - array
+          items:
+            type: string
+          description: Dados essenciais que faltaram neste item.
+        evidencias:
+          type:
+            - 'null'
+            - array
+          items:
+            $ref: '#/components/schemas/Evidencia'
+          description: Evidências citadas para este item.
+        achados:
+          type:
+            - 'null'
+            - array
+          items:
+            $ref: '#/components/schemas/Achado'
+          description: Achados registrados para este item.
+      description: Item analisado dentro da execução.
+    ItemPedido:
+      type: object
+      properties:
+        descricao:
+          type:
+            - 'null'
+            - string
+          description: 'Descrição original do produto, com função, composição e apresentação quando conhecidas.'
+        ncmDeclarada:
+          type:
+            - 'null'
+            - string
+          description: NCM já declarada. Usada somente na auditoria.
+        tributosDeclarados:
+          type:
+            - 'null'
+            - object
+          additionalProperties:
+            type: string
+          description: 'Tratamentos já declarados, por tributo. Usados somente na auditoria.'
+      description: Item informado pelo solicitante.
+    PedidoAnalise:
+      type: object
+      properties:
+        usuario:
+          type: string
+          description: Identificador do usuário que solicita a análise.
+        empresa:
+          type: string
+          description: Empresa à qual a execução pertence.
+        papel:
+          type: string
+          description: Papel do solicitante nesta execução.
+        finalidade:
+          type: string
+          description: 'Finalidade do pedido, como sugerir ou auditar.'
+        uf:
+          type: string
+          description: UF do contexto da execução.
+        regimeTributario:
+          type: string
+          description: Regime tributário da execução.
+        tipoOperacao:
+          type: string
+          description: 'Tipo de operação, como entrada ou saída.'
+        dataVigencia:
+          type: string
+          description: Data em que a classificação precisa valer.
+          format: date
+        intencao:
+          description: 'sugerirNcm, auditarDeclarado, sugerirTratamento ou sugerirXmlItem.'
+          $ref: '#/components/schemas/IntencaoAnalise'
+        entrada:
+          description: 'Texto, arquivo ou lista de itens a analisar.'
+          $ref: '#/components/schemas/EntradaPedido'
+      description: Pedido da análise. Todos os campos de contexto são obrigatórios.
+    SeveridadeAchado:
+      enum:
+        - erro
+        - aviso
+      description: erro ou aviso.
+    SituacaoItem:
+      enum:
+        - sugerido
+        - divergente
+        - dadoAusente
+        - semEvidencia
+        - falhaTecnica
+      description: 'sugerido, divergente, dadoAusente, semEvidencia ou falhaTecnica.'
+    SituacaoTratamento:
+      enum:
+        - sustentado
+        - limitacao
+      description: sustentado quando veio da evidência vencedora; limitacao quando não pôde ser sustentado.
+    TipoEntrada:
+      enum:
+        - texto
+        - xmlNfe
+        - planilha
+        - pdf
+        - laudo
+        - fichaTecnica
+      description: 'texto, xmlNfe, planilha, pdf, laudo ou fichaTecnica.'
+    ValorTratamento:
+      type: object
+      properties:
+        situacao:
+          description: sustentado quando veio da evidência vencedora; limitacao quando não pôde ser sustentado.
+          $ref: '#/components/schemas/SituacaoTratamento'
+        valor:
+          type:
+            - 'null'
+            - string
+          description: Valor sustentado. Nulo quando há limitação.
+        motivo:
+          type:
+            - 'null'
+            - string
+          description: 'Motivo da limitação, quando o valor não foi sustentado.'
+      description: Valor de um tributo na sugestão.
+    VersaoBase:
+      required:
+        - base
+        - versao
+      type: object
+      properties:
+        base:
+          type: string
+          description: Nome da base.
+        versao:
+          type: string
+          description: Versão registrada da base.
+      description: Versão de uma base citada na execução.
+tags:
+  - name: Análises v1

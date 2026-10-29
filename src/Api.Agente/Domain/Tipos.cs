@@ -1,5 +1,8 @@
+using System.ComponentModel;
+
 namespace Api.Agente.Domain;
 
+[Description("Autoridade da evidência. A legislação vigente prevalece sobre as demais.")]
 public enum FaixaAutoridade
 {
     LegislacaoVigente = 1,
@@ -8,6 +11,7 @@ public enum FaixaAutoridade
     TextoFornecedor = 4
 }
 
+[Description("Estado da nota: bloqueada, pendente de dado, falha técnica ou sugestão liberada.")]
 public enum EstadoNota
 {
     Bloqueada,
@@ -16,6 +20,7 @@ public enum EstadoNota
     SugestaoLiberada
 }
 
+[Description("Situação do item após a análise.")]
 public enum SituacaoItem
 {
     Sugerido,
@@ -25,6 +30,7 @@ public enum SituacaoItem
     FalhaTecnica
 }
 
+[Description("Classe do achado registrado.")]
 public enum ClasseAchado
 {
     ErroEstrutural,
@@ -34,12 +40,14 @@ public enum ClasseAchado
     FalhaTecnica
 }
 
+[Description("Gravidade do achado.")]
 public enum SeveridadeAchado
 {
     Erro,
     Aviso
 }
 
+[Description("O que a execução deve fazer com os itens.")]
 public enum IntencaoAnalise
 {
     SugerirNcm,
@@ -48,6 +56,7 @@ public enum IntencaoAnalise
     SugerirXmlItem
 }
 
+[Description("Forma da entrada aceita nesta versão.")]
 public enum TipoEntrada
 {
     Texto,
@@ -58,6 +67,7 @@ public enum TipoEntrada
     FichaTecnica
 }
 
+[Description("Se o tratamento foi sustentado por evidência ou ficou limitado.")]
 public enum SituacaoTratamento
 {
     Sustentado,
