@@ -1,0 +1,3 @@
+interface:
+  display_name: "Memória conversacional MongoDB"
+  short_description: "Memória conversacional MongoDB para projetos .NET com Spec Kit"
