@@ -17,11 +17,11 @@
 
 **Purpose**: Criar a Api.RAG sem regra fiscal e sem número de busca
 
-- [ ] T001 Incluir `src/Api.RAG/Api.RAG.csproj` em `Agente.slnx`, .NET 10, com as pastas `Endpoints`, `Application`, `Domain` e `Infrastructure`, sem referência de projeto à Api.Agente
-- [ ] T002 Criar `tests/Api.RAG.Tests/Api.RAG.Tests.csproj` com xUnit e as pastas `unit`, `contract` e `integration`
-- [ ] T003 [P] Fixar `Pgvector` 0.3.2, `ModelContextProtocol.AspNetCore` 2.3.0 e `PdfPig` 0.1.16 em `Directory.Packages.props`
-- [ ] T004 [P] Criar as opções de ingestão e embedding e preencher `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json` e `appsettings.Production.json` com chave vazia, limite de arquivo vazio, parâmetros de busca vazios, `Embedding:Tentativas` 2 e `Embedding:TimeoutSegundos` 60
-- [ ] T005 [P] Criar `src/Api.RAG/Properties/launchSettings.json` com os perfis Development em `http://localhost:5120`, Testing em `http://localhost:5121` e Production em `http://localhost:5122`, todos abrindo `swagger`
+- [x] T001 Incluir `src/Api.RAG/Api.RAG.csproj` em `Agente.slnx`, .NET 10, com as pastas `Endpoints`, `Application`, `Domain` e `Infrastructure`, sem referência de projeto à Api.Agente
+- [x] T002 Criar `tests/Api.RAG.Tests/Api.RAG.Tests.csproj` com xUnit e as pastas `unit`, `contract` e `integration`
+- [x] T003 [P] Fixar `Pgvector` 0.3.2, `ModelContextProtocol.AspNetCore` 2.3.0 e `PdfPig` 0.1.16 em `Directory.Packages.props`
+- [x] T004 [P] Criar as opções de ingestão e embedding e preencher `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json` e `appsettings.Production.json` com chave vazia, limite de arquivo vazio, parâmetros de busca vazios, `Embedding:Tentativas` 2 e `Embedding:TimeoutSegundos` 60
+- [x] T005 [P] Criar `src/Api.RAG/Properties/launchSettings.json` com os perfis Development em `http://localhost:5120`, Testing em `http://localhost:5121` e Production em `http://localhost:5122`, todos abrindo `swagger`
 
 ---
 
