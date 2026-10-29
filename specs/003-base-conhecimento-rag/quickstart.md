@@ -14,7 +14,7 @@ Na raiz do repositório, depois que o projeto existir:
 dotnet run --project src/Api.RAG --launch-profile Development
 ```
 
-Development escuta `http://localhost:5120` e abre o Swagger. Testing escuta `http://localhost:5121`. Production escuta `http://localhost:5122`.
+Development escuta `http://localhost:5120` e abre `/swagger`. O documento versionado fica em `/openapi/v1.json` e o arquivo `contracts/rag-v1.openapi.yaml` é a cópia gerada dele. Testing escuta `http://localhost:5121`. Production escuta `http://localhost:5122`.
 
 A ferramenta MCP fica em `/mcp`. Na Api.Agente, `Conhecimento:McpUrl` aponta para `http://localhost:5120/mcp` quando a base local for a de Development.
 

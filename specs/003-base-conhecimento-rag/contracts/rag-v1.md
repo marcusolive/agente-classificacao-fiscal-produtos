@@ -32,6 +32,10 @@ Lista vazia: a busca terminou e nenhum chunk daquela data serviu ao texto.
 
 Erro da ferramenta: parâmetro de busca ausente, provedor de embedding indisponível ou banco indisponível. Esse erro não vem acompanhado de lista parcial.
 
+## Swagger
+
+O documento publicado é `v1`, versão 1.0.0, em `/openapi/v1.json`. A interface é `/swagger`. A raiz redireciona para essa interface e não entra no documento. Cada operação REST, cada resposta e cada propriedade visível têm descrição. O YAML `rag-v1.openapi.yaml` é gerado desse documento e o teste impede que os dois divirjam. A ferramenta MCP permanece fora do OpenAPI.
+
 ## O que este contrato não faz
 
 Não cria XSD. Não devolve custo. Não autentica por papel. Não oferece ferramenta de gravação ao agente.

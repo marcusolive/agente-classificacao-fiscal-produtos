@@ -16,7 +16,7 @@ A Api.RAG grava documento, versão e chunk no PostgreSQL próprio, expõe a admi
 
 **Storage**: PostgreSQL exclusivo da Api.RAG, connection string `Rag`. A primeira migração cria a extensão `vector`, documento e chunk, sem coluna de embedding. A coluna `vector(N)` e o índice entram numa migração posterior, só quando a dimensão e a métrica tiverem sido avaliadas e registradas.
 
-**Testing**: xUnit em `tests/Api.RAG.Tests`. Ambiente Testing usa repositório em memória e não chama OpenAI nem PostgreSQL. A suíte cobre reingestão, versão isolada, lista vazia depois de busca concluída, fonte rastreável, caso ausente na ferramenta e falha quando a busca não está configurada.
+**Testing**: xUnit em `tests/Api.RAG.Tests`. Ambiente Testing usa repositório em memória e não chama OpenAI nem PostgreSQL. A suíte cobre reingestão, versão isolada, lista vazia depois de busca concluída, fonte rastreável, caso ausente na ferramenta e falha quando a busca não está configurada. O arquivo `contracts/rag-v1.openapi.yaml` será a serialização de `/openapi/v1.json`. O teste de contrato recusa divergência e não regrava o arquivo.
 
 **Target Platform**: API HTTP com perfis Development, Testing e Production, cada um na própria porta.
 
@@ -99,7 +99,11 @@ Segredos ficam no ambiente.
 - Testing: `http://localhost:5121`
 - Production: `http://localhost:5122`
 
-A raiz abre o Swagger. O MCP fica em `/mcp`. A Api.Agente aponta `Conhecimento:McpUrl` para essa URL absoluta quando os dois processos estiverem no ar.
+A raiz redireciona para `/swagger` e esse redirecionamento fica fora do documento. O MCP fica em `/mcp`. A Api.Agente aponta `Conhecimento:McpUrl` para essa URL absoluta quando os dois processos estiverem no ar.
+
+## Documentação Swagger
+
+O documento OpenAPI se chama `v1` e a versão publicada é 1.0.0. Título, descrição da API, cada operação, cada resposta e cada propriedade de schema têm texto objetivo. A descrição de propriedade sai de `DescriptionAttribute`, no mesmo mecanismo da Api.Agente. O servidor do documento é `/`. A interface fica em `/swagger` e aponta para `/openapi/v1.json`. A ferramenta MCP não vira rota REST: a descrição do documento informa que a consulta da análise é `consultar_conhecimento`. Uma mudança incompatível será um documento v2.
 
 ## Fora deste plano
 
