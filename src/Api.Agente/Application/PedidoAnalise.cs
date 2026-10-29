@@ -72,6 +72,39 @@ public sealed class ItemPedido
     [Description("NCM já declarada. Usada somente na auditoria.")]
     public string? NcmDeclarada { get; set; }
 
+    [Description("CEST já declarado. Usado somente na auditoria.")]
+    public string? CestDeclarado { get; set; }
+
+    [Description("CFOP informado no item.")]
+    public string? Cfop { get; set; }
+
+    [Description("CST informado no item.")]
+    public string? Cst { get; set; }
+
+    [Description("Unidade informada, quando o item já vem separado.")]
+    public string? Unidade { get; set; }
+
+    [Description("Quantidade informada, quando o item já vem separado.")]
+    public string? Quantidade { get; set; }
+
+    [Description("UF específica do item. Quando vazia, vale a UF da execução.")]
+    public string? Uf { get; set; }
+
+    [Description("Regime específico do item. Quando vazio, vale o regime da execução.")]
+    public string? RegimeTributario { get; set; }
+
+    [Description("Origem informada no item.")]
+    public string? Origem { get; set; }
+
+    [Description("Destino informado no item.")]
+    public string? Destino { get; set; }
+
+    [Description("Operação específica do item. Quando vazia, vale a operação da execução.")]
+    public string? TipoOperacao { get; set; }
+
+    [Description("Vigência específica do item. Quando vazia, vale a vigência da execução.")]
+    public DateOnly? DataVigencia { get; set; }
+
     [Description("Tratamentos já declarados, por tributo. Usados somente na auditoria.")]
     public Dictionary<string, string>? TributosDeclarados { get; set; }
 }

@@ -1,8 +1,8 @@
 openapi: '3.1.1'
 info:
   title: Agente de classificação fiscal de produtos
-  description: Documento v1. A análise de itens permanece no contrato 1.0.0. A confirmação de caso é o contrato 1.1.0 e não grava precedente. Não atesta conformidade fiscal. Uma mudança incompatível será publicada como v2.
-  version: '1.1.0'
+  description: Documento v1. A análise de itens permanece no contrato 1.0.0 e o contexto do item prevalece sobre o da execução. A confirmação de caso é o contrato 1.1.0 e não grava precedente. Não atesta conformidade fiscal. Uma mudança incompatível será publicada como v2.
+  version: '1.2.0'
 servers:
   - url: /
 paths:
@@ -165,6 +165,67 @@ components:
         - ausenciaEvidencias
         - falhaTecnica
       description: Classe do achado.
+    ContextoEfetivo:
+      required:
+        - uf
+        - regimeTributario
+        - tipoOperacao
+      type: object
+      properties:
+        uf:
+          type: string
+          description: UF efetiva do item.
+        regimeTributario:
+          type: string
+          description: Regime tributário efetivo do item.
+        origem:
+          type:
+            - 'null'
+            - string
+          description: 'Origem informada no item, quando existir.'
+        destino:
+          type:
+            - 'null'
+            - string
+          description: 'Destino informado no item, quando existir.'
+        tipoOperacao:
+          type: string
+          description: Tipo de operação efetivo do item.
+        dataVigencia:
+          type: string
+          description: Vigência usada na consulta deste item.
+          format: date
+        unidade:
+          type:
+            - 'null'
+            - string
+          description: 'Unidade informada, quando o item já vem separado.'
+        quantidade:
+          type:
+            - 'null'
+            - string
+          description: 'Quantidade informada, quando o item já vem separado.'
+        ncmDeclarada:
+          type:
+            - 'null'
+            - string
+          description: NCM declarada. Usada na auditoria.
+        cestDeclarado:
+          type:
+            - 'null'
+            - string
+          description: CEST declarado. Usado na auditoria quando houver evidência desse tributo.
+        cfop:
+          type:
+            - 'null'
+            - string
+          description: CFOP informado no item.
+        cst:
+          type:
+            - 'null'
+            - string
+          description: CST informado no item.
+      description: Contexto efetivo do item. O valor informado no item prevalece sobre o da execução.
     DecisaoConfirmacao:
       enum:
         - aceitar
@@ -345,6 +406,11 @@ components:
         atributos:
           description: Atributos extraídos do texto do item.
           $ref: '#/components/schemas/AtributosProduto'
+        contexto:
+          oneOf:
+            - type: 'null'
+            - description: Contexto efetivo do item. O valor informado no item prevalece sobre o da execução.
+              $ref: '#/components/schemas/ContextoEfetivo'
         situacao:
           description: 'sugerido, divergente, dadoAusente, semEvidencia ou falhaTecnica.'
           $ref: '#/components/schemas/SituacaoItem'
@@ -437,6 +503,62 @@ components:
             - 'null'
             - string
           description: NCM já declarada. Usada somente na auditoria.
+        cestDeclarado:
+          type:
+            - 'null'
+            - string
+          description: CEST já declarado. Usado somente na auditoria.
+        cfop:
+          type:
+            - 'null'
+            - string
+          description: CFOP informado no item.
+        cst:
+          type:
+            - 'null'
+            - string
+          description: CST informado no item.
+        unidade:
+          type:
+            - 'null'
+            - string
+          description: 'Unidade informada, quando o item já vem separado.'
+        quantidade:
+          type:
+            - 'null'
+            - string
+          description: 'Quantidade informada, quando o item já vem separado.'
+        uf:
+          type:
+            - 'null'
+            - string
+          description: 'UF específica do item. Quando vazia, vale a UF da execução.'
+        regimeTributario:
+          type:
+            - 'null'
+            - string
+          description: 'Regime específico do item. Quando vazio, vale o regime da execução.'
+        origem:
+          type:
+            - 'null'
+            - string
+          description: Origem informada no item.
+        destino:
+          type:
+            - 'null'
+            - string
+          description: Destino informado no item.
+        tipoOperacao:
+          type:
+            - 'null'
+            - string
+          description: 'Operação específica do item. Quando vazia, vale a operação da execução.'
+        dataVigencia:
+          type:
+            - 'null'
+            - string
+          description: 'Vigência específica do item. Quando vazia, vale a vigência da execução.'
+          format: date
         tributosDeclarados:
           type:
             - 'null'

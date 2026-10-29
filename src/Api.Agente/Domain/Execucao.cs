@@ -14,6 +14,9 @@ public sealed class ItemAnalise
     [Description("Atributos extraídos do texto do item.")]
     public AtributosProduto Atributos { get; init; } = new();
 
+    [Description("Contexto efetivo do item. O valor informado no item prevalece sobre o da execução.")]
+    public ContextoEfetivo? Contexto { get; set; }
+
     [Description("sugerido, divergente, dadoAusente, semEvidencia ou falhaTecnica.")]
     public SituacaoItem Situacao { get; set; }
 

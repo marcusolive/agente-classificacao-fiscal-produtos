@@ -28,10 +28,12 @@ public sealed class AnalisarExecucao(
         var itens = Itens(pedido.Entrada);
         for (var i = 0; i < itens.Count; i++)
         {
-            var classificado = await classificador.ClassificarAsync((i + 1).ToString(), itens[i].Descricao!.Trim(), pedido.DataVigencia, ct);
+            var contexto = ContextoDoItem.Resolver(pedido, itens[i]);
+            var classificado = await classificador.ClassificarAsync((i + 1).ToString(), itens[i].Descricao!.Trim(), contexto.DataVigencia, ct);
+            classificado.Contexto = contexto;
             if (pedido.Intencao == IntencaoAnalise.AuditarDeclarado)
             {
-                ComparadorDeclaracao.Aplicar(classificado, itens[i].NcmDeclarada, itens[i].TributosDeclarados);
+                ComparadorDeclaracao.Aplicar(classificado, itens[i].NcmDeclarada, ContextoDoItem.TributosDeclarados(itens[i]));
             }
 
             MontadorEnvelope.Aplicar(classificado, pedido.Intencao, layouts);
