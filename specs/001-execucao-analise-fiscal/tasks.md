@@ -79,12 +79,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T025 [US2] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/BloqueioNotaTests.cs` para divergência, declaração compatível e mistura de item consistente com item divergente
+- [x] T025 [US2] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/BloqueioNotaTests.cs` para divergência, declaração compatível e mistura de item consistente com item divergente
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Implementar `src/Api.Agente/Application/ComparadorDeclaracao.cs` marcando `divergente`, o que está incorreto e a classificação sustentada
-- [ ] T027 [US2] Usar o comparador em `src/Api.Agente/Application/AnalisarExecucao.cs` para a intenção `auditarDeclarado`, sem atestar conformidade fiscal
+- [x] T026 [US2] Implementar `src/Api.Agente/Application/ComparadorDeclaracao.cs` marcando `divergente`, o que está incorreto e a classificação sustentada
+- [x] T027 [US2] Usar o comparador em `src/Api.Agente/Application/AnalisarExecucao.cs` para a intenção `auditarDeclarado`, sem atestar conformidade fiscal
 
 **Checkpoint**: As histórias 1 e 2 passam nos próprios testes.
 
