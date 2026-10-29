@@ -45,7 +45,7 @@ public sealed class ClassificadorDeItem(
         if (ordenacao.Vencedora is null)
         {
             item.Situacao = SituacaoItem.SemEvidencia;
-            item.RevisaoHumana = ordenacao.Empate;
+            item.RevisaoHumana = true;
             item.Achados.Add(new Achado
             {
                 Classe = ClasseAchado.AusenciaEvidencias,
