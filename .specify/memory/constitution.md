@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.3 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-10-29
+**Versão**: 1.0.4 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-10-29
 
 ## 1. Propósito e escopo
 
@@ -375,6 +375,13 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Impacto: o plano e o contrato da execução da análise passam a ser a fonte desses itens. As demais specifications ainda não existem.
 - Responsável: mantenedor do produto, na sessão de especificação.
 
+#### 1.0.4 — 2026-10-29
+
+- A DP-04 foi resolvida apenas quanto à autoridade e ao limite da correção, na specification `specs/002-confirmacao-caso-corporativo/spec.md`. A autoridade é o papel informado na confirmação, sem catálogo fixo de cargos. A correção só pode usar código presente nas evidências da execução. O caso vale somente para a empresa dessa execução.
+- A gravação do precedente continua proibida até a specification da Api.RAG.
+- Impacto: a specification 001 não passa a gravar caso. A specification 002 publica o contrato de confirmação sem persistir precedente.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
 ## 9. Decisões pendentes
 
 Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementação **NÃO DEVE** transformá-la em comportamento fixo.
@@ -384,7 +391,7 @@ Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementa�
 | DP-01 | Armazenamento de memória conversacional: MongoDB ou Redis. | Plano técnico, por ADR, antes da implementação de memória. | Não implementar memória. |
 | DP-02 | Política de retenção, expiração, exclusão e proteção de dados sensíveis da memória, da trilha e do consumo. | Plano técnico, por ADR, antes da persistência correspondente. | Não persistir conteúdo sensível com política implícita. |
 | DP-03 | Aplicação do isolamento por organização e papéis de acesso. | Esclarecimentos e especificação de segurança. | Não assumir cenário multiorganização nem papel não especificado. |
-| DP-04 | Autoridade habilitada a confirmar ou corrigir sugestão e bloqueio para a etapa 25. | Esclarecimentos e especificação do caso corporativo. | Não gravar precedente corporativo. |
+| DP-04 | Autoridade e correção resolvidas na specification `002`: papel informado na confirmação, sem catálogo fixo; correção só com código presente nas evidências; caso restrito à empresa da execução. A gravação do precedente segue em aberto até a Api.RAG. | Especificação da Api.RAG | Não gravar precedente corporativo. |
 | DP-05 | Resolvida em `specs/001-execucao-analise-fiscal/spec.md`. Ordem: legislação vigente, notas e Regras Gerais de Interpretação, caso corporativo confirmado, texto do fornecedor. | Especificação da análise | Seguir essa ordem. Empate na mesma faixa pede revisão humana. |
 | DP-06 | Limiar resolvido na specification `001`: confiança baixa é menor que 70 em escala de 0 a 100. Impacto relevante segue em aberto. | Esclarecimento da análise, com exemplos reais de impacto | Não inventar o que é impacto relevante. Calcular confiança na escala decidida. |
 | DP-07 | Tipos resolvidos na specification `001`: descrição textual, XML de NF-e dos itens, planilha, PDF, laudo e ficha técnica. Tamanho máximo e limites numéricos seguem em aberto. | Esclarecimento do contrato de entrada | Não aceitar tipo fora dessa lista e não inventar limite numérico. |
