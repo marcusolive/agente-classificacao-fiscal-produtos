@@ -58,7 +58,7 @@ specs/001-execucao-analise-fiscal/
 ├── quickstart.md
 ├── contracts/
 │   └── analise-v1.openapi.yaml
-└── tasks.md              # fase seguinte, ainda não criada
+└── tasks.md
 
 docs/adr/
 ├── 0001-execucao-sincrona-e-postgresql.md
