@@ -29,10 +29,10 @@
 
 **Purpose**: Persistência, validação e o documento Swagger vazio de regra fiscal
 
-- [ ] T006 Criar documento, chunk e caso confirmado em `src/Api.RAG/Domain`, conforme `data-model.md`, com `DescriptionAttribute` em cada tipo e propriedade públicos
-- [ ] T007 Criar a migração idempotente sem coluna `vector`, o repositório PostgreSQL e o repositório em memória usado em Testing e quando `ConnectionStrings:Rag` estiver vazia
-- [ ] T008 Implementar o validador que recusa chave ausente, campo obrigatório ausente, formato fora de texto, PDF e XML de notas, arquivo sem limite configurado e conteúdo diferente na mesma versão
-- [ ] T009 Publicar o OpenAPI `v1` em 1.0.0, com título, descrição, servidor `/`, descrição de operação e de resposta, descrições de schema a partir de `DescriptionAttribute`, interface em `/swagger` apontando para `/openapi/v1.json` e redirecionamento da raiz para `/swagger` fora do documento
+- [x] T006 Criar documento, chunk e caso confirmado em `src/Api.RAG/Domain`, conforme `data-model.md`, com `DescriptionAttribute` em cada tipo e propriedade públicos
+- [x] T007 Criar a migração idempotente sem coluna `vector`, o repositório PostgreSQL e o repositório em memória usado em Testing e quando `ConnectionStrings:Rag` estiver vazia
+- [x] T008 Implementar o validador que recusa chave ausente, campo obrigatório ausente, formato fora de texto, PDF e XML de notas, arquivo sem limite configurado e conteúdo diferente na mesma versão
+- [x] T009 Publicar o OpenAPI `v1` em 1.0.0, com título, descrição, servidor `/`, descrição de operação e de resposta, descrições de schema a partir de `DescriptionAttribute`, interface em `/swagger` apontando para `/openapi/v1.json` e redirecionamento da raiz para `/swagger` fora do documento
 
 **Checkpoint**: O projeto sobe no Swagger. Nenhuma história grava documento ainda.
 
