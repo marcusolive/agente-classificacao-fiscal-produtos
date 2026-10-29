@@ -14,11 +14,11 @@ A Api.Agente recebe o contexto e os itens, valida o que é determinístico, cons
 
 **Language/Version**: .NET 10 com ASP.NET Core
 
-**Primary Dependencies**: Semantic Kernel 1.81.0, conector OpenAI 1.81.0, ModelContextProtocol 2.3.0 e Npgsql 10.0.3, fixados em `Directory.Packages.props`.
+**Primary Dependencies**: Semantic Kernel 1.81.0, conector OpenAI 1.81.0, ModelContextProtocol 2.3.0, Npgsql 10.0.3, Microsoft.AspNetCore.OpenApi 10.0.14, Microsoft.OpenApi 2.12.2 e Swashbuckle.AspNetCore.SwaggerUI 10.3.1, fixados em `Directory.Packages.props`.
 
 **Storage**: PostgreSQL da Api.Agente para execução e resultado. Sem vetor e sem memória conversacional nesta fatia.
 
-**Testing**: xUnit. Testes de unidade do fluxo, teste de contrato do OpenAPI e teste de integração com dublê de conhecimento.
+**Testing**: xUnit. Testes de unidade do fluxo, teste de contrato do OpenAPI e teste de integração com dublê de conhecimento. O arquivo `contracts/analise-v1.openapi.yaml` é a serialização do documento publicado em `/openapi/v1.json`.
 
 **Target Platform**: API HTTP executada em desenvolvimento, teste e produção com configuração própria.
 

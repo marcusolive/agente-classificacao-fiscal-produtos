@@ -1,11 +1,9 @@
 # Quickstart: Execução da análise fiscal de itens
 
-Este guia vale depois que as tarefas forem implementadas. Ainda não há código de produção.
-
 ## Pré-requisitos
 
 - .NET 10 SDK
-- PostgreSQL da Api.Agente
+- PostgreSQL da Api.Agente, quando a execução for persistida fora dos testes
 - Variável `OpenAI:Model` apontando para o modelo disponível no ambiente
 - `Analise:TamanhoMaximoBytes` somente quando o limite de arquivo tiver sido decidido
 
@@ -13,15 +11,15 @@ Este guia vale depois que as tarefas forem implementadas. Ainda não há código
 
 Os testes usam evidências fixas no dublê de conhecimento. Essa base não é legislação de produção.
 
-Cenários mínimos do teste de integração:
+Resultado em 2026-10-29: os cenários abaixo passam em `dotnet test tests/Api.Agente.Tests/Api.Agente.Tests.csproj`.
 
-1. Descrição com dado essencial e legislação no dublê devolve NCM dessa legislação, confiança 90 e XML vazio enquanto não houver layout registrado.
-2. NCM declarada diferente da legislação bloqueia a nota e cita a fonte.
-3. Item sem composição pede o dado e não bloqueia os demais.
-4. Duas legislações da mesma vigência em conflito pedem revisão e não escolhem vencedor.
-5. Caso corporativo como melhor fonte devolve sugestão, confiança 65 e revisão humana.
-6. Arquivo enviado sem limite configurado é recusado sem estado de bloqueio fiscal.
+1. `SugestaoTextoTests.Legislacao_vence_o_fornecedor_e_deixa_o_xml_vazio` — NCM da legislação, confiança 90 e XML vazio.
+2. `BloqueioNotaTests.Ncm_declarada_diferente_bloqueia_a_nota` — NCM divergente bloqueia a nota.
+3. `ItemIncompletoTests.Item_completo_segue_quando_o_vizinho_esta_incompleto` — item sem composição pede o dado e não bloqueia o vizinho.
+4. `RevisaoHumanaTests.Empate_na_mesma_faixa_nao_escolhe_vencedor_nem_bloqueia` — duas legislações empatadas pedem revisão.
+5. `RevisaoHumanaTests.Caso_confirmado_devolve_sugestao_65_e_revisao` — caso confirmado devolve sugestão, confiança 65 e revisão.
+6. `DocumentoSemLayoutTests.Arquivo_sem_limite_configurado_e_recusado_sem_bloqueio` — arquivo sem limite configurado é recusado sem bloqueio fiscal.
 
-## Consulta do resultado
+## Consulta e documentação
 
-`POST /analises` devolve o contrato `1.0.0`. O mesmo corpo é obtido em `GET /analises/{execucaoId}`.
+`POST /v1/analises` devolve o contrato `1.0.0`. O mesmo corpo é obtido em `GET /v1/analises/{execucaoId}`. A interface fica em `/swagger` e o documento em `GET /openapi/v1.json`. O arquivo `contracts/analise-v1.openapi.yaml` é gerado desse documento. `ContratoGeradoTests` recusa divergência entre os dois.

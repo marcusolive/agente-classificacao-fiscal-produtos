@@ -41,7 +41,7 @@
 - [x] T013 Criar `src/Api.Agente/Infrastructure/PostgresRepositorioExecucao.cs` e a migração das tabelas `execucao`, `item_analise`, `evidencia_citada` e `achado` no PostgreSQL da Api.Agente
 - [x] T014 Implementar `src/Api.Agente/Application/ValidadorEntrada.cs` para rejeitar contexto incompleto, tipo fora da lista e arquivo quando `Analise:TamanhoMaximoBytes` estiver vazio ou for excedido
 - [x] T015 Implementar `src/Api.Agente/Application/ValidadorSaidaModelo.cs` para recusar código, alíquota, dispositivo ou referência ausente das evidências da vigência
-- [x] T016 Expor `POST /analises` e `GET /analises/{execucaoId}` em `src/Api.Agente/Endpoints/AnalisesEndpoints.cs`, devolvendo o contrato `specs/001-execucao-analise-fiscal/contracts/analise-v1.openapi.yaml`
+- [x] T016 Expor `POST /v1/analises` e `GET /v1/analises/{execucaoId}` em `src/Api.Agente/Endpoints/AnalisesEndpoints.cs`, devolvendo o contrato `specs/001-execucao-analise-fiscal/contracts/analise-v1.openapi.yaml`
 
 **Checkpoint**: Fundação pronta. As histórias podem seguir.
 
@@ -98,11 +98,11 @@
 
 ### Tests for User Story 3
 
-- [ ] T028 [US3] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/ItemIncompletoTests.cs` para item isolado incompleto e para incompleto junto de divergente
+- [x] T028 [US3] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/ItemIncompletoTests.cs` para item isolado incompleto e para incompleto junto de divergente
 
 ### Implementation for User Story 3
 
-- [ ] T029 [US3] Encerrar só o item incompleto em `src/Api.Agente/Application/AnalisarExecucao.cs`, com situação `dadoAusente` e estado `pendenteDeDado` quando não houver divergência
+- [x] T029 [US3] Encerrar só o item incompleto em `src/Api.Agente/Application/AnalisarExecucao.cs`, com situação `dadoAusente` e estado `pendenteDeDado` quando não houver divergência
 
 **Checkpoint**: As histórias 1, 2 e 3 passam sem uma impedir a outra.
 
@@ -116,12 +116,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T030 [P] [US4] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/DocumentoSemLayoutTests.cs` para arquivo sem layout, arquivo vazio e tipo de entrada desconhecido
+- [x] T030 [P] [US4] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/DocumentoSemLayoutTests.cs` para arquivo sem layout, arquivo vazio e tipo de entrada desconhecido
 
 ### Implementation for User Story 4
 
-- [ ] T031 [US4] Criar `src/Api.Agente/Application/RegistroDeLayouts.cs` vazio de layouts oficiais e usá-lo em `src/Api.Agente/Application/ValidadorEntrada.cs` para devolver `erroEstrutural` sem bloqueio fiscal
-- [ ] T032 [US4] Manter `xmlItem` restrito ao item em `src/Api.Agente/Application/MontadorEnvelope.cs` quando a intenção for `sugerirXmlItem`, sem montar NF-e completa
+- [x] T031 [US4] Criar `src/Api.Agente/Application/RegistroDeLayouts.cs` vazio de layouts oficiais e usá-lo em `src/Api.Agente/Application/ValidadorEntrada.cs` para devolver `erroEstrutural` sem bloqueio fiscal
+- [x] T032 [US4] Manter `xmlItem` restrito ao item em `src/Api.Agente/Application/MontadorEnvelope.cs` quando a intenção for `sugerirXmlItem`, sem montar NF-e completa
 
 **Checkpoint**: Documento sem fonte de layout não entra na classificação.
 
@@ -135,12 +135,12 @@
 
 ### Tests for User Story 5
 
-- [ ] T033 [US5] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/RevisaoHumanaTests.cs` para nota 65, empate, nota 90 e impacto relevante falso
+- [x] T033 [US5] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/RevisaoHumanaTests.cs` para nota 65, empate, nota 90 e impacto relevante falso
 
 ### Implementation for User Story 5
 
-- [ ] T034 [US5] Aplicar o marcador `revisaoHumana` em `src/Api.Agente/Application/AnalisarExecucao.cs` sem alterar o estado da nota quando não houver divergência
-- [ ] T035 [US5] Fixar `impactoRelevante` como falso em `src/Api.Agente/Application/MontadorEnvelope.cs` até existir definição com exemplos reais
+- [x] T034 [US5] Aplicar o marcador `revisaoHumana` em `src/Api.Agente/Application/AnalisarExecucao.cs` sem alterar o estado da nota quando não houver divergência
+- [x] T035 [US5] Fixar `impactoRelevante` como falso em `src/Api.Agente/Application/MontadorEnvelope.cs` até existir definição com exemplos reais
 
 **Checkpoint**: Todas as histórias ficam verificáveis pelo quickstart.
 
@@ -150,9 +150,9 @@
 
 **Purpose**: Fechar a fatia sem ampliar o escopo
 
-- [ ] T036 Executar os cenários de `specs/001-execucao-analise-fiscal/quickstart.md` e registrar o resultado no teste de integração já criado
-- [ ] T037 Revisar `src/Api.Agente` para garantir que não existe gravação de caso corporativo, acesso a vetor da Api.RAG, memória conversacional, consumo ou servidor A2A
-- [ ] T038 [P] Atualizar `specs/001-execucao-analise-fiscal/plan.md` com as versões exatas gravadas em `Directory.Packages.props`
+- [x] T036 Executar os cenários de `specs/001-execucao-analise-fiscal/quickstart.md` e registrar o resultado no teste de integração já criado
+- [x] T037 Revisar `src/Api.Agente` para garantir que não existe gravação de caso corporativo, acesso a vetor da Api.RAG, memória conversacional, consumo ou servidor A2A
+- [x] T038 [P] Atualizar `specs/001-execucao-analise-fiscal/plan.md` com as versões exatas gravadas em `Directory.Packages.props`
 
 ---
 
