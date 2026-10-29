@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.2 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-10-29
+**Versão**: 1.0.3 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-10-29
 
 ## 1. Propósito e escopo
 
@@ -368,6 +368,13 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Impacto: o plano técnico deve calcular a confiança nessa escala. Não havia outra specification além da `001`.
 - Responsável: mantenedor do produto, na sessão de especificação.
 
+#### 1.0.3 — 2026-10-29
+
+- A DP-10 foi resolvida pelo contrato `specs/001-execucao-analise-fiscal/contracts/analise-v1.openapi.yaml`.
+- A DP-13 foi resolvida quanto a tempo limite e retentativa no plano da specification 001. O identificador do modelo continua em configuração, sem nome fixo.
+- Impacto: o plano e o contrato da execução da análise passam a ser a fonte desses itens. As demais specifications ainda não existem.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
 ## 9. Decisões pendentes
 
 Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementação **NÃO DEVE** transformá-la em comportamento fixo.
@@ -383,10 +390,10 @@ Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementa�
 | DP-07 | Tipos resolvidos na specification `001`: descrição textual, XML de NF-e dos itens, planilha, PDF, laudo e ficha técnica. Tamanho máximo e limites numéricos seguem em aberto. | Esclarecimento do contrato de entrada | Não aceitar tipo fora dessa lista e não inventar limite numérico. |
 | DP-08 | Layouts, versões, schemas XSD e validadores por tipo de documento, obtidos de fonte oficial. | Especificação documental, antes do validador correspondente. | Não inventar schema nem aplicar XSD sem schema registrado. |
 | DP-09 | Regras fiscais, tabelas vigentes, alíquotas e critérios de enquadramento de NCM, IPI, ICMS, CEST, PIS/COFINS e IBS/CBS. | Especificação de conhecimento e de tratamento, com fonte e vigência. | Não codificar regra fiscal sem essa especificação. |
-| DP-10 | Contrato versionado da saída do LLM e envelope da API, incluindo severidades. | Especificação da execução do agente. | Não publicar resposta final com contrato implícito. |
+| DP-10 | Resolvida no contrato `analise-v1.openapi.yaml` da specification 001. | Especificação da execução do agente | Publicar a resposta no contrato versão 1.0.0. |
 | DP-11 | Critérios de segmentação, deduplicação, reprocessamento e atualização da ingestão. | Especificação da Api.RAG. | Não ingerir base normativa com regra implícita de chunk. |
 | DP-12 | Modelo de embeddings, dimensão, estratégia de busca, topK e limiar, avaliados com exemplos representativos. | Plano técnico da Api.RAG. | Não fixar esses parâmetros como padrão de produção. |
-| DP-13 | Modelo de LLM, parâmetros de execução, timeouts e política limitada de retentativa. | Plano técnico da Api.Agente. | Não acoplar modelo ou número de retentativas ao domínio. |
+| DP-13 | Tempos e retentativa resolvidos no plano da specification 001. O nome do modelo permanece configuração obrigatória. | Plano técnico da Api.Agente | Não gravar nome de modelo no código de domínio. |
 | DP-14 | Tabela de preços, moeda e regra de estimativa de custo. | Plano técnico de consumo. | Não gravar custo estimado sem referência da tabela. |
 | DP-15 | Operações expostas pelo servidor A2A e seu contrato. | Especificação de integração, antes da exposição A2A. | Não expor operação A2A não especificada. |
 | DP-16 | Projetos ou bibliotecas além de Api.Agente e Api.RAG. | Plano técnico, com justificativa de responsabilidade. | Não criar projeto adicional sem essa justificativa. |
