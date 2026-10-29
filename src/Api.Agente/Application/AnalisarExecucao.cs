@@ -2,7 +2,11 @@ using Api.Agente.Domain;
 
 namespace Api.Agente.Application;
 
-public sealed class AnalisarExecucao(ValidadorEntrada validador, ClassificadorDeItem classificador, IRepositorioExecucao repositorio)
+public sealed class AnalisarExecucao(
+    ValidadorEntrada validador,
+    ClassificadorDeItem classificador,
+    IRepositorioExecucao repositorio,
+    RegistroDeLayouts layouts)
 {
     public async Task<Execucao> ExecutarAsync(PedidoAnalise pedido, CancellationToken ct)
     {
@@ -30,6 +34,7 @@ public sealed class AnalisarExecucao(ValidadorEntrada validador, ClassificadorDe
                 ComparadorDeclaracao.Aplicar(classificado, itens[i].NcmDeclarada, itens[i].TributosDeclarados);
             }
 
+            MontadorEnvelope.Aplicar(classificado, pedido.Intencao, layouts);
             execucao.Itens.Add(classificado);
         }
 

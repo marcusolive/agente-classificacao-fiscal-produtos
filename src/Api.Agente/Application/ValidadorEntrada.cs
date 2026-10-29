@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 
 namespace Api.Agente.Application;
 
-public sealed class ValidadorEntrada(IOptions<OpcoesAnalise> opcoes)
+public sealed class ValidadorEntrada(IOptions<OpcoesAnalise> opcoes, RegistroDeLayouts layouts)
 {
     public void Validar(PedidoAnalise pedido)
     {
@@ -39,7 +39,7 @@ public sealed class ValidadorEntrada(IOptions<OpcoesAnalise> opcoes)
         var arquivo = pedido.Entrada.Arquivo;
         if (arquivo is null || string.IsNullOrWhiteSpace(arquivo.ConteudoBase64))
         {
-            throw new EntradaRejeitadaException("Arquivo vazio ou ausente.");
+            throw new EntradaRejeitadaException("Arquivo vazio ou ausente.", ClasseAchado.ErroEstrutural);
         }
 
         byte[] bytes;
@@ -49,12 +49,12 @@ public sealed class ValidadorEntrada(IOptions<OpcoesAnalise> opcoes)
         }
         catch (FormatException)
         {
-            throw new EntradaRejeitadaException("Arquivo ilegível.");
+            throw new EntradaRejeitadaException("Arquivo ilegível.", ClasseAchado.ErroEstrutural);
         }
 
         if (bytes.Length == 0)
         {
-            throw new EntradaRejeitadaException("Arquivo vazio ou ausente.");
+            throw new EntradaRejeitadaException("Arquivo vazio ou ausente.", ClasseAchado.ErroEstrutural);
         }
 
         var limite = opcoes.Value.TamanhoMaximoBytes;
@@ -66,6 +66,13 @@ public sealed class ValidadorEntrada(IOptions<OpcoesAnalise> opcoes)
         if (bytes.Length > limite)
         {
             throw new EntradaRejeitadaException("Arquivo acima do limite de processamento.");
+        }
+
+        if (!layouts.Possui(pedido.Entrada.Tipo))
+        {
+            throw new EntradaRejeitadaException(
+                "Layout não registrado para o tipo e a versão do documento.",
+                ClasseAchado.ErroEstrutural);
         }
     }
 
