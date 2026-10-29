@@ -42,13 +42,14 @@ builder.Services.AddSingleton<RegistroDeLayouts>();
 builder.Services.AddSingleton<ValidadorEntrada>();
 builder.Services.AddSingleton<ClassificadorDeItem>();
 builder.Services.AddSingleton<AnalisarExecucao>();
+builder.Services.AddSingleton<ConfirmadorDeCaso>();
 builder.Services.AddOpenApi(ContratoApi.Documento, options =>
 {
     options.AddDocumentTransformer((documento, _, _) =>
     {
         documento.Info ??= new OpenApiInfo();
         documento.Info.Title = ContratoApi.Titulo;
-        documento.Info.Version = ContratoApi.Versao;
+        documento.Info.Version = ContratoApi.VersaoDocumento;
         documento.Info.Description = ContratoApi.Descricao;
         documento.Servers = [new OpenApiServer { Url = "/" }];
         return Task.CompletedTask;
@@ -70,6 +71,9 @@ builder.Services.AddOpenApi(ContratoApi.Documento, options =>
                     ("CriarAnaliseV1", "400") => "Contexto ausente, tipo não aceito, arquivo vazio, arquivo sem limite ou layout não registrado. Não há bloqueio fiscal.",
                     ("ObterAnaliseV1", "200") => "Execução encontrada no contrato 1.0.0.",
                     ("ObterAnaliseV1", "404") => "Execução não encontrada.",
+                    ("ConfirmarCasoV1", "200") => "Confirmação validada no contrato 1.1.0. O caso não foi gravado.",
+                    ("ConfirmarCasoV1", "400") => "Papel ausente, item inexistente ou código que não está nas evidências da execução.",
+                    ("ConfirmarCasoV1", "404") => "Execução não encontrada.",
                     _ => corpo.Description
                 };
             }
@@ -103,10 +107,11 @@ if (!testando && !string.IsNullOrWhiteSpace(conexao))
 app.MapOpenApi();
 app.MapSwaggerUI("/swagger", options =>
 {
-    options.SwaggerEndpoint($"/openapi/{ContratoApi.Documento}.json", $"{ContratoApi.Titulo} {ContratoApi.Versao}");
-    options.DocumentTitle = $"{ContratoApi.Titulo} {ContratoApi.Versao}";
+    options.SwaggerEndpoint($"/openapi/{ContratoApi.Documento}.json", $"{ContratoApi.Titulo} {ContratoApi.VersaoDocumento}");
+    options.DocumentTitle = $"{ContratoApi.Titulo} {ContratoApi.VersaoDocumento}";
 });
 AnalisesEndpoints.Mapear(app);
+ConfirmacoesEndpoints.Mapear(app);
 app.Run();
 
 public partial class Program;

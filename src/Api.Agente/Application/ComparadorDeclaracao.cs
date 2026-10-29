@@ -12,9 +12,9 @@ public static class ComparadorDeclaracao
         }
 
         var divergencias = new List<string>();
-        if (!string.IsNullOrWhiteSpace(ncmDeclarada) && !MesmaNcm(ncmDeclarada, item.NcmSugerida))
+        if (!string.IsNullOrWhiteSpace(ncmDeclarada) && !CodigoFiscal.MesmaNcm(ncmDeclarada, item.NcmSugerida))
         {
-            divergencias.Add($"NCM declarada {SomenteDigitos(ncmDeclarada)}");
+            divergencias.Add($"NCM declarada {CodigoFiscal.SomenteDigitos(ncmDeclarada)}");
         }
 
         if (tributosDeclarados is not null)
@@ -52,10 +52,4 @@ public static class ComparadorDeclaracao
             Descricao = $"O declarado não se sustenta na evidência. Classificação sustentada: {item.NcmSugerida}."
         });
     }
-
-    private static bool MesmaNcm(string declarada, string sugerida) =>
-        SomenteDigitos(declarada) == SomenteDigitos(sugerida);
-
-    private static string SomenteDigitos(string codigo) =>
-        string.Concat(codigo.Where(char.IsDigit));
 }

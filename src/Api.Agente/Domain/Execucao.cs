@@ -30,25 +30,25 @@ public sealed class ItemAnalise
     public string? NcmSugerida { get; set; }
 
     [Description("Outros códigos encontrados nas evidências, sem vencer a ordenação.")]
-    public List<string> Alternativas { get; } = [];
+    public List<string> Alternativas { get; init; } = [];
 
     [Description("Campo declarado que a auditoria considerou divergente.")]
     public string? Incorreto { get; set; }
 
     [Description("Tratamento por tributo: ipi, icms, cest, pis, cofins e ibsCbs.")]
-    public Dictionary<string, ValorTratamento> Tratamento { get; } = [];
+    public Dictionary<string, ValorTratamento> Tratamento { get; init; } = [];
 
     [Description("XML somente do item, quando a intenção pede esse trecho.")]
     public string? XmlItem { get; set; }
 
     [Description("Dados essenciais que faltaram neste item.")]
-    public List<string> DadoAusente { get; } = [];
+    public List<string> DadoAusente { get; init; } = [];
 
     [Description("Evidências citadas para este item.")]
-    public List<Evidencia> Evidencias { get; } = [];
+    public List<Evidencia> Evidencias { get; init; } = [];
 
     [Description("Achados registrados para este item.")]
-    public List<Achado> Achados { get; } = [];
+    public List<Achado> Achados { get; init; } = [];
 }
 
 [Description("Resultado da execução no contrato 1.0.0.")]
@@ -94,13 +94,13 @@ public sealed class Execucao
     public EstadoNota EstadoNota { get; set; }
 
     [Description("Resultado de cada item. Um item incompleto não impede os demais.")]
-    public List<ItemAnalise> Itens { get; } = [];
+    public List<ItemAnalise> Itens { get; init; } = [];
 
     [Description("Checagens que esta versão ainda não executa.")]
-    public List<string> ValidacoesNaoRealizadas { get; } = [];
+    public List<string> ValidacoesNaoRealizadas { get; init; } = [];
 
     [Description("Versões das bases citadas nesta execução.")]
-    public List<VersaoBase> VersoesBases { get; } = [];
+    public List<VersaoBase> VersoesBases { get; init; } = [];
 }
 
 public static class VersaoDoAgente

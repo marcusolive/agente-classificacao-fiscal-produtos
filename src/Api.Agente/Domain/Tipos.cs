@@ -67,6 +67,13 @@ public enum TipoEntrada
     FichaTecnica
 }
 
+[Description("Se o revisor aceita a sugestão sustentada ou corrige com outro valor já evidenciado.")]
+public enum DecisaoConfirmacao
+{
+    Aceitar,
+    Corrigir
+}
+
 [Description("Se o tratamento foi sustentado por evidência ou ficou limitado.")]
 public enum SituacaoTratamento
 {

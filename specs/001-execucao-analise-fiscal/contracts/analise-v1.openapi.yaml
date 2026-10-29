@@ -1,8 +1,8 @@
 openapi: '3.1.1'
 info:
   title: Agente de classificação fiscal de produtos
-  description: 'Contrato 1.0.0 da análise fiscal de itens. Sugere NCM e tratamento, audita o declarado e pode bloquear a nota. Não atesta conformidade fiscal. Uma mudança incompatível deste contrato será publicada como v2.'
-  version: 1.0.0
+  description: Documento v1. A análise de itens permanece no contrato 1.0.0. A confirmação de caso é o contrato 1.1.0 e não grava precedente. Não atesta conformidade fiscal. Uma mudança incompatível será publicada como v2.
+  version: '1.1.0'
 servers:
   - url: /
 paths:
@@ -54,6 +54,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Execucao'
+        '404':
+          description: Execução não encontrada.
+  '/v1/analises/{execucaoId}/confirmacoes':
+    post:
+      tags:
+        - Confirmações v1
+      summary: Confirma ou corrige itens de uma execução.
+      description: Valida o papel informado e a decisão de cada item no contrato 1.1.0. Aceite usa a NCM sustentada. Correção só usa valor presente nas evidências. A resposta não grava caso corporativo e não altera a execução.
+      operationId: ConfirmarCasoV1
+      parameters:
+        - name: execucaoId
+          in: path
+          description: Identificador devolvido na criação da análise.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoConfirmacao'
+        required: true
+      responses:
+        '200':
+          description: Confirmação validada no contrato 1.1.0. O caso não foi gravado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoConfirmacao'
+        '400':
+          description: 'Papel ausente, item inexistente ou código que não está nas evidências da execução.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResposta'
         '404':
           description: Execução não encontrada.
 components:
@@ -129,6 +165,11 @@ components:
         - ausenciaEvidencias
         - falhaTecnica
       description: Classe do achado.
+    DecisaoConfirmacao:
+      enum:
+        - aceitar
+        - corrigir
+      description: aceitar ou corrigir.
     EntradaPedido:
       type: object
       properties:
@@ -260,23 +301,17 @@ components:
           description: 'bloqueada, pendenteDeDado, falhaTecnica ou sugestaoLiberada.'
           $ref: '#/components/schemas/EstadoNota'
         itens:
-          type:
-            - 'null'
-            - array
+          type: array
           items:
             $ref: '#/components/schemas/ItemAnalise'
           description: Resultado de cada item. Um item incompleto não impede os demais.
         validacoesNaoRealizadas:
-          type:
-            - 'null'
-            - array
+          type: array
           items:
             type: string
           description: Checagens que esta versão ainda não executa.
         versoesBases:
-          type:
-            - 'null'
-            - array
+          type: array
           items:
             $ref: '#/components/schemas/VersaoBase'
           description: Versões das bases citadas nesta execução.
@@ -333,9 +368,7 @@ components:
             - string
           description: NCM sustentada pelas evidências. Não é certificação.
         alternativas:
-          type:
-            - 'null'
-            - array
+          type: array
           items:
             type: string
           description: 'Outros códigos encontrados nas evidências, sem vencer a ordenação.'
@@ -345,9 +378,7 @@ components:
             - string
           description: Campo declarado que a auditoria considerou divergente.
         tratamento:
-          type:
-            - 'null'
-            - object
+          type: object
           additionalProperties:
             $ref: '#/components/schemas/ValorTratamento'
           description: 'Tratamento por tributo: ipi, icms, cest, pis, cofins e ibsCbs.'
@@ -357,27 +388,42 @@ components:
             - string
           description: 'XML somente do item, quando a intenção pede esse trecho.'
         dadoAusente:
-          type:
-            - 'null'
-            - array
+          type: array
           items:
             type: string
           description: Dados essenciais que faltaram neste item.
         evidencias:
-          type:
-            - 'null'
-            - array
+          type: array
           items:
             $ref: '#/components/schemas/Evidencia'
           description: Evidências citadas para este item.
         achados:
-          type:
-            - 'null'
-            - array
+          type: array
           items:
             $ref: '#/components/schemas/Achado'
           description: Achados registrados para este item.
       description: Item analisado dentro da execução.
+    ItemConfirmado:
+      required:
+        - itemId
+        - ncm
+      type: object
+      properties:
+        itemId:
+          type: string
+          description: Identificador do item na execução.
+        decisao:
+          description: aceitar ou corrigir.
+          $ref: '#/components/schemas/DecisaoConfirmacao'
+        ncm:
+          type: string
+          description: NCM confirmada. Não é certificação.
+        tributos:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Tratamentos confirmados, apenas valores sustentados ou presentes nas evidências.'
+      description: Item aceito ou corrigido sem sair das evidências da execução.
     ItemPedido:
       type: object
       properties:
@@ -399,6 +445,28 @@ components:
             type: string
           description: 'Tratamentos já declarados, por tributo. Usados somente na auditoria.'
       description: Item informado pelo solicitante.
+    ItemPedidoConfirmacao:
+      type: object
+      properties:
+        itemId:
+          type: string
+          description: Identificador do item na execução.
+        decisao:
+          description: aceitar usa a NCM sustentada. corrigir exige outro valor presente nas evidências.
+          $ref: '#/components/schemas/DecisaoConfirmacao'
+        ncm:
+          type:
+            - 'null'
+            - string
+          description: NCM da correção. Obrigatória apenas quando a decisão é corrigir.
+        tributos:
+          type:
+            - 'null'
+            - object
+          additionalProperties:
+            type: string
+          description: Tratamentos da correção. Cada valor precisa existir nas evidências do item.
+      description: Decisão de um item da execução.
     PedidoAnalise:
       type: object
       properties:
@@ -434,6 +502,55 @@ components:
           description: 'Texto, arquivo ou lista de itens a analisar.'
           $ref: '#/components/schemas/EntradaPedido'
       description: Pedido da análise. Todos os campos de contexto são obrigatórios.
+    PedidoConfirmacao:
+      type: object
+      properties:
+        papelAutoridade:
+          type: string
+          description: Papel de quem confirma. Obrigatório. Não há catálogo fixo de cargos.
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemPedidoConfirmacao'
+          description: Itens da execução que serão aceitos ou corrigidos.
+      description: Confirmação dos itens de uma execução. Não grava caso corporativo.
+    ResultadoConfirmacao:
+      required:
+        - empresa
+        - papelAutoridade
+      type: object
+      properties:
+        contratoVersao:
+          type: string
+          description: Versão deste contrato de confirmação. O valor atual é 1.1.0.
+        execucaoId:
+          type: string
+          description: Execução confirmada.
+          format: uuid
+        empresa:
+          type: string
+          description: Empresa da execução de origem. A confirmação não aceita outra empresa.
+        papelAutoridade:
+          type: string
+          description: Papel informado por quem confirmou.
+        gravado:
+          type: boolean
+          description: Falso nesta versão. O caso ainda não é precedente.
+        validacoesNaoRealizadas:
+          type:
+            - 'null'
+            - array
+          items:
+            type: string
+          description: Checagens deixadas para a base de conhecimento.
+        itens:
+          type:
+            - 'null'
+            - array
+          items:
+            $ref: '#/components/schemas/ItemConfirmado'
+          description: Itens aceitos ou corrigidos dentro das evidências.
+      description: Confirmação validada no contrato 1.1.0. O caso não foi gravado.
     SeveridadeAchado:
       enum:
         - erro
@@ -493,3 +610,4 @@ components:
       description: Versão de uma base citada na execução.
 tags:
   - name: Análises v1
+  - name: Confirmações v1

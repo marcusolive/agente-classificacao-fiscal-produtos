@@ -58,7 +58,7 @@ public class AnaliseContratoTests : IClassFixture<integration.FabricaApi>
         documento.EnsureSuccessStatusCode();
         var corpo = (await documento.Content.ReadFromJsonAsync<JsonElement>())!;
         var info = corpo.GetProperty("info");
-        Assert.Equal("1.0.0", info.GetProperty("version").GetString());
+        Assert.Equal("1.1.0", info.GetProperty("version").GetString());
         Assert.False(string.IsNullOrWhiteSpace(info.GetProperty("description").GetString()));
 
         var caminhos = corpo.GetProperty("paths");
@@ -66,6 +66,8 @@ public class AnaliseContratoTests : IClassFixture<integration.FabricaApi>
         Assert.False(string.IsNullOrWhiteSpace(criar.GetProperty("post").GetProperty("description").GetString()));
         Assert.True(caminhos.TryGetProperty("/v1/analises/{execucaoId}", out var obter));
         Assert.False(string.IsNullOrWhiteSpace(obter.GetProperty("get").GetProperty("summary").GetString()));
+        Assert.True(caminhos.TryGetProperty("/v1/analises/{execucaoId}/confirmacoes", out var confirmar));
+        Assert.False(string.IsNullOrWhiteSpace(confirmar.GetProperty("post").GetProperty("description").GetString()));
         Assert.False(caminhos.TryGetProperty("/analises", out _));
 
         var esquemas = corpo.GetProperty("components").GetProperty("schemas");
@@ -77,7 +79,7 @@ public class AnaliseContratoTests : IClassFixture<integration.FabricaApi>
 
         var ui = await cliente.GetAsync("/swagger/index.html");
         ui.EnsureSuccessStatusCode();
-        Assert.Contains("1.0.0", await ui.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+        Assert.Contains("1.1.0", await ui.Content.ReadAsStringAsync(), StringComparison.Ordinal);
 
         var script = await cliente.GetAsync("/swagger/index.js");
         script.EnsureSuccessStatusCode();
