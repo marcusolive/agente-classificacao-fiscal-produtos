@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: Execução da análise fiscal de itens
+  version: 1.0.0
+  description: >
+    Envelope da API de análise. O JSON do modelo é interno e não é esta resposta.
+    Identificador, versões, estado da nota e metadados operacionais são preenchidos pelo sistema.
+servers:
+  - url: /
+paths:
+  /analises:
+    post:
+      operationId: criarAnalise
+      summary: Executa a análise e devolve o resultado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoAnalise'
+      responses:
+        '200':
+          description: Análise processada. O estado da nota pode ser bloqueio, pendência, falha ou sugestão liberada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoAnalise'
+        '400':
+          description: Contexto ausente, tipo de entrada não aceito ou arquivo recusado antes da análise.
+  /analises/{execucaoId}:
+    get:
+      operationId: obterAnalise
+      summary: Recupera o resultado persistido.
+      parameters:
+        - name: execucaoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Execução encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoAnalise'
+        '404':
+          description: Execução não encontrada.
+components:
+  schemas:
+    PedidoAnalise:
+      type: object
+      required: [usuario, empresa, papel, finalidade, uf, regimeTributario, tipoOperacao, dataVigencia, intencao, entrada]
+      properties:
+        usuario: { type: string }
+        empresa: { type: string }
+        papel: { type: string }
+        finalidade: { type: string }
+        uf: { type: string }
+        regimeTributario: { type: string }
+        tipoOperacao: { type: string }
+        dataVigencia: { type: string, format: date }
+        intencao:
+          type: string
+          enum: [sugerirNcm, auditarDeclarado, sugerirTratamento, sugerirXmlItem]
+        entrada:
+          $ref: '#/components/schemas/EntradaAnalise'
+    EntradaAnalise:
+      type: object
+      required: [tipo]
+      properties:
+        tipo:
+          type: string
+          enum: [texto, xmlNfe, planilha, pdf, laudo, fichaTecnica]
+        texto: { type: string }
+        arquivo:
+          type: object
+          description: Presente quando a entrada não é só texto. O layout interno do arquivo não faz parte deste contrato.
+          properties:
+            nome: { type: string }
+            conteudoBase64: { type: string }
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemInformado'
+    ItemInformado:
+      type: object
+      properties:
+        descricao: { type: string }
+        unidade: { type: string }
+        quantidade: { type: string }
+        ncmDeclarada: { type: string }
+        cestDeclarado: { type: string }
+        cfop: { type: string }
+        cst: { type: string }
+        uf: { type: string }
+        regimeTributario: { type: string }
+        origem: { type: string }
+        destino: { type: string }
+        tipoOperacao: { type: string }
+        dataVigencia: { type: string, format: date }
+    ResultadoAnalise:
+      type: object
+      required: [contratoVersao, execucaoId, versaoAgente, estadoNota, itens]
+      properties:
+        contratoVersao: { type: string, example: '1.0.0' }
+        execucaoId: { type: string, format: uuid }
+        versaoAgente: { type: string }
+        versoesBases:
+          type: array
+          items:
+            type: object
+            required: [base, versao]
+            properties:
+              base: { type: string }
+              versao: { type: string }
+        estadoNota:
+          type: string
+          enum: [bloqueada, pendenteDeDado, falhaTecnica, sugestaoLiberada]
+        itens:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultadoItem'
+        validacoesNaoRealizadas:
+          type: array
+          items: { type: string }
+    ResultadoItem:
+      type: object
+      required: [itemId, situacao, revisaoHumana, impactoRelevante]
+      properties:
+        itemId: { type: string }
+        textoOriginal: { type: string }
+        situacao:
+          type: string
+          enum: [sugerido, divergente, dadoAusente, semEvidencia, falhaTecnica]
+        revisaoHumana: { type: boolean }
+        impactoRelevante: { type: boolean, description: Permanece falso até a definição de impacto relevante. }
+        confianca:
+          type: integer
+          minimum: 0
+          maximum: 100
+          nullable: true
+        ncmSugerida: { type: string, nullable: true }
+        alternativas:
+          type: array
+          items: { type: string }
+        incorreto: { type: string, nullable: true }
+        tratamento:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ValorOuLimitacao'
+        xmlItem: { type: string, nullable: true }
+        dadoAusente:
+          type: array
+          items: { type: string }
+        evidencias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Evidencia'
+        achados:
+          type: array
+          items:
+            $ref: '#/components/schemas/Achado'
+    ValorOuLimitacao:
+      type: object
+      required: [situacao]
+      properties:
+        situacao:
+          type: string
+          enum: [sustentado, limitacao]
+        valor: { type: string, nullable: true }
+        motivo: { type: string, nullable: true }
+    Evidencia:
+      type: object
+      required: [fonte, faixaAutoridade, vigencia]
+      properties:
+        fonte: { type: string }
+        faixaAutoridade:
+          type: string
+          enum: [legislacaoVigente, notasRgi, casoCorporativoConfirmado, textoFornecedor]
+        trecho: { type: string, nullable: true }
+        localizacao: { type: string, nullable: true }
+        vigencia: { type: string, format: date }
+    Achado:
+      type: object
+      required: [classe, severidade, descricao]
+      properties:
+        classe:
+          type: string
+          enum: [erroEstrutural, inconsistenciaNegocio, indicioIa, ausenciaEvidencias, falhaTecnica]
+        severidade:
+          type: string
+          enum: [erro, aviso]
+        descricao: { type: string }
