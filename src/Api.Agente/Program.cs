@@ -104,6 +104,7 @@ if (!testando && !string.IsNullOrWhiteSpace(conexao))
     await postgres.GarantirEsquemaAsync(CancellationToken.None);
 }
 
+app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 app.MapOpenApi();
 app.MapSwaggerUI("/swagger", options =>
 {

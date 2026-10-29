@@ -1,5 +1,7 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Api.Agente.Tests.contract;
 
@@ -84,5 +86,10 @@ public class AnaliseContratoTests : IClassFixture<integration.FabricaApi>
         var script = await cliente.GetAsync("/swagger/index.js");
         script.EnsureSuccessStatusCode();
         Assert.Contains("/openapi/v1.json", await script.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+        var semSeguir = _fabrica.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var raiz = await semSeguir.GetAsync("/");
+        Assert.Equal(HttpStatusCode.Redirect, raiz.StatusCode);
+        Assert.Equal("/swagger", raiz.Headers.Location?.OriginalString);
     }
 }
