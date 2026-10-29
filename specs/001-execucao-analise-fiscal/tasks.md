@@ -17,10 +17,10 @@
 
 **Purpose**: Criar a solução da Api.Agente sem regra fiscal
 
-- [ ] T001 Criar `Agente.sln`, o projeto `src/Api.Agente/Api.Agente.csproj` em .NET 10 e as pastas `Endpoints`, `Application`, `Domain` e `Infrastructure`
-- [ ] T002 Criar `tests/Api.Agente.Tests/Api.Agente.Tests.csproj` com xUnit e as pastas `unit`, `contract` e `integration`
-- [ ] T003 [P] Fixar as versões de `Microsoft.SemanticKernel`, `Microsoft.SemanticKernel.Connectors.OpenAI`, `ModelContextProtocol` e `Npgsql` em `Directory.Packages.props`, registrando os números escolhidos nesse arquivo
-- [ ] T004 [P] Criar `src/Api.Agente/Infrastructure/OpcoesAnalise.cs` com `OpenAI:Model`, `Analise:TamanhoMaximoBytes`, `Analise:TentativasSaidaInvalida`, `Analise:TimeoutModeloSegundos` e `Analise:TimeoutConhecimentoSegundos`, sem segredo no repositório
+- [x] T001 Criar `Agente.sln`, o projeto `src/Api.Agente/Api.Agente.csproj` em .NET 10 e as pastas `Endpoints`, `Application`, `Domain` e `Infrastructure`
+- [x] T002 Criar `tests/Api.Agente.Tests/Api.Agente.Tests.csproj` com xUnit e as pastas `unit`, `contract` e `integration`
+- [x] T003 [P] Fixar as versões de `Microsoft.SemanticKernel`, `Microsoft.SemanticKernel.Connectors.OpenAI`, `ModelContextProtocol` e `Npgsql` em `Directory.Packages.props`, registrando os números escolhidos nesse arquivo
+- [x] T004 [P] Criar `src/Api.Agente/Infrastructure/OpcoesAnalise.cs` com `OpenAI:Model`, `Analise:TamanhoMaximoBytes`, `Analise:TentativasSaidaInvalida`, `Analise:TimeoutModeloSegundos` e `Analise:TimeoutConhecimentoSegundos`, sem segredo no repositório
 
 ---
 
@@ -30,18 +30,18 @@
 
 **⚠️ CRITICAL**: Nenhuma história começa antes desta fase
 
-- [ ] T005 Criar as entidades de `specs/001-execucao-analise-fiscal/data-model.md` em `src/Api.Agente/Domain/Execucao.cs`, `ItemAnalise.cs`, `Evidencia.cs`, `TratamentoSugerido.cs` e `Achado.cs`
-- [ ] T006 [P] Escrever o teste que falha em `tests/Api.Agente.Tests/unit/ConfiancaPorFaixaTests.cs` para as notas 90, 80, 65 e 40 e para confiança desconhecida sem gravar zero
-- [ ] T007 Implementar `src/Api.Agente/Domain/ConfiancaPorFaixa.cs` até T006 passar, conforme `docs/adr/0002-confianca-por-faixa-de-autoridade.md`
-- [ ] T008 [P] Escrever o teste que falha em `tests/Api.Agente.Tests/unit/OrdenacaoEvidenciasTests.cs` para a ordem legislação, notas e regras, caso confirmado e texto do fornecedor, incluindo empate
-- [ ] T009 Implementar `src/Api.Agente/Domain/OrdenacaoDeEvidencias.cs` até T008 passar
-- [ ] T010 [P] Escrever o teste que falha em `tests/Api.Agente.Tests/unit/EstadoNotaTests.cs` para a precedência bloqueada, pendente de dado, falha técnica e sugestão liberada
-- [ ] T011 Implementar `src/Api.Agente/Domain/CalculadoraEstadoNota.cs` até T010 passar
-- [ ] T012 Criar a porta `src/Api.Agente/Application/IConsultaConhecimento.cs` e o dublê `tests/Api.Agente.Tests/integration/DubleConsultaConhecimento.cs`, sem referência ao banco da Api.RAG
-- [ ] T013 Criar `src/Api.Agente/Infrastructure/PostgresRepositorioExecucao.cs` e a migração das tabelas `execucao`, `item_analise`, `evidencia_citada` e `achado` no PostgreSQL da Api.Agente
-- [ ] T014 Implementar `src/Api.Agente/Application/ValidadorEntrada.cs` para rejeitar contexto incompleto, tipo fora da lista e arquivo quando `Analise:TamanhoMaximoBytes` estiver vazio ou for excedido
-- [ ] T015 Implementar `src/Api.Agente/Application/ValidadorSaidaModelo.cs` para recusar código, alíquota, dispositivo ou referência ausente das evidências da vigência
-- [ ] T016 Expor `POST /analises` e `GET /analises/{execucaoId}` em `src/Api.Agente/Endpoints/AnalisesEndpoints.cs`, devolvendo o contrato `specs/001-execucao-analise-fiscal/contracts/analise-v1.openapi.yaml`
+- [x] T005 Criar as entidades de `specs/001-execucao-analise-fiscal/data-model.md` em `src/Api.Agente/Domain/Execucao.cs`, `ItemAnalise.cs`, `Evidencia.cs`, `TratamentoSugerido.cs` e `Achado.cs`
+- [x] T006 [P] Escrever o teste que falha em `tests/Api.Agente.Tests/unit/ConfiancaPorFaixaTests.cs` para as notas 90, 80, 65 e 40 e para confiança desconhecida sem gravar zero
+- [x] T007 Implementar `src/Api.Agente/Domain/ConfiancaPorFaixa.cs` até T006 passar, conforme `docs/adr/0002-confianca-por-faixa-de-autoridade.md`
+- [x] T008 [P] Escrever o teste que falha em `tests/Api.Agente.Tests/unit/OrdenacaoEvidenciasTests.cs` para a ordem legislação, notas e regras, caso confirmado e texto do fornecedor, incluindo empate
+- [x] T009 Implementar `src/Api.Agente/Domain/OrdenacaoDeEvidencias.cs` até T008 passar
+- [x] T010 [P] Escrever o teste que falha em `tests/Api.Agente.Tests/unit/EstadoNotaTests.cs` para a precedência bloqueada, pendente de dado, falha técnica e sugestão liberada
+- [x] T011 Implementar `src/Api.Agente/Domain/CalculadoraEstadoNota.cs` até T010 passar
+- [x] T012 Criar a porta `src/Api.Agente/Application/IConsultaConhecimento.cs` e o dublê `tests/Api.Agente.Tests/integration/DubleConsultaConhecimento.cs`, sem referência ao banco da Api.RAG
+- [x] T013 Criar `src/Api.Agente/Infrastructure/PostgresRepositorioExecucao.cs` e a migração das tabelas `execucao`, `item_analise`, `evidencia_citada` e `achado` no PostgreSQL da Api.Agente
+- [x] T014 Implementar `src/Api.Agente/Application/ValidadorEntrada.cs` para rejeitar contexto incompleto, tipo fora da lista e arquivo quando `Analise:TamanhoMaximoBytes` estiver vazio ou for excedido
+- [x] T015 Implementar `src/Api.Agente/Application/ValidadorSaidaModelo.cs` para recusar código, alíquota, dispositivo ou referência ausente das evidências da vigência
+- [x] T016 Expor `POST /analises` e `GET /analises/{execucaoId}` em `src/Api.Agente/Endpoints/AnalisesEndpoints.cs`, devolvendo o contrato `specs/001-execucao-analise-fiscal/contracts/analise-v1.openapi.yaml`
 
 **Checkpoint**: Fundação pronta. As histórias podem seguir.
 
@@ -55,17 +55,17 @@
 
 ### Tests for User Story 1
 
-- [ ] T017 [P] [US1] Escrever o teste de contrato que falha em `tests/Api.Agente.Tests/contract/AnaliseContratoTests.cs` para o envelope versão 1.0.0
-- [ ] T018 [P] [US1] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/SugestaoTextoTests.cs` cobrindo sugestão por legislação, conflito com texto de fornecedor, ausência de evidência e tributo sem evidência
+- [x] T017 [P] [US1] Escrever o teste de contrato que falha em `tests/Api.Agente.Tests/contract/AnaliseContratoTests.cs` para o envelope versão 1.0.0
+- [x] T018 [P] [US1] Escrever o teste de integração que falha em `tests/Api.Agente.Tests/integration/SugestaoTextoTests.cs` cobrindo sugestão por legislação, conflito com texto de fornecedor, ausência de evidência e tributo sem evidência
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Implementar `src/Api.Agente/Application/AvaliadorDadosEssenciais.cs` para composição, função e apresentação
-- [ ] T020 [US1] Implementar `src/Api.Agente/Application/NormalizadorProduto.cs` preservando o texto original
-- [ ] T021 [US1] Implementar `src/Api.Agente/Application/AnalisarExecucao.cs` para a intenção `sugerirNcm`, usando somente candidatos recuperados
-- [ ] T022 [US1] Implementar `src/Api.Agente/Infrastructure/OpenAiAnalisador.cs` com saída estruturada, no máximo duas novas tentativas e tempo limite configurado
-- [ ] T023 [US1] Implementar `src/Api.Agente/Application/MontadorEnvelope.cs` preenchendo identificador, versões e estado pelo sistema, com `xmlItem` vazio e validação não realizada quando não houver layout de item
-- [ ] T024 [US1] Ligar o adaptador MCP em `src/Api.Agente/Infrastructure/McpConsultaConhecimento.cs` à porta da T012, tratando indisponibilidade como falha técnica
+- [x] T019 [US1] Implementar `src/Api.Agente/Application/AvaliadorDadosEssenciais.cs` para composição, função e apresentação
+- [x] T020 [US1] Implementar `src/Api.Agente/Application/NormalizadorProduto.cs` preservando o texto original
+- [x] T021 [US1] Implementar `src/Api.Agente/Application/AnalisarExecucao.cs` para a intenção `sugerirNcm`, usando somente candidatos recuperados
+- [x] T022 [US1] Implementar `src/Api.Agente/Infrastructure/OpenAiAnalisador.cs` com saída estruturada, no máximo duas novas tentativas e tempo limite configurado
+- [x] T023 [US1] Implementar `src/Api.Agente/Application/MontadorEnvelope.cs` preenchendo identificador, versões e estado pelo sistema, com `xmlItem` vazio e validação não realizada quando não houver layout de item
+- [x] T024 [US1] Ligar o adaptador MCP em `src/Api.Agente/Infrastructure/McpConsultaConhecimento.cs` à porta da T012, tratando indisponibilidade como falha técnica
 
 **Checkpoint**: A história 1 funciona sozinha com o dublê de conhecimento.
 

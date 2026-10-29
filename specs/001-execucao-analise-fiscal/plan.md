@@ -14,7 +14,7 @@ A Api.Agente recebe o contexto e os itens, valida o que é determinístico, cons
 
 **Language/Version**: .NET 10 com ASP.NET Core
 
-**Primary Dependencies**: Semantic Kernel com conector OpenAI para saída estruturada; cliente MCP para a porta de conhecimento. Versões exatas no primeiro commit de código.
+**Primary Dependencies**: Semantic Kernel 1.81.0, conector OpenAI 1.81.0, ModelContextProtocol 2.3.0 e Npgsql 10.0.3, fixados em `Directory.Packages.props`.
 
 **Storage**: PostgreSQL da Api.Agente para execução e resultado. Sem vetor e sem memória conversacional nesta fatia.
 
