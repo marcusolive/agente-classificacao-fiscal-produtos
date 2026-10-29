@@ -1,0 +1,3 @@
+interface:
+  display_name: "RAG com PgVector"
+  short_description: "RAG com PgVector para projetos .NET com Spec Kit"
