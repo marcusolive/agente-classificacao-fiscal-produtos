@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Api.Agente/Api.Agente.csproj" />
+    <Project Path="src/Api.RAG/Api.RAG.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Api.Agente.Tests/Api.Agente.Tests.csproj" />
+    <Project Path="tests/Api.RAG.Tests/Api.RAG.Tests.csproj" />
   </Folder>
 </Solution>
