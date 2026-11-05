@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.5 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-10-29
+**Versão**: 1.0.6 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-05
 
 ## 1. Propósito e escopo
 
@@ -390,6 +390,13 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Impacto: a specification 003 é a fonte desses critérios. A specification 002 não passa a gravar o caso. A Api.Agente não acessa o banco da Api.RAG.
 - Responsável: mantenedor do produto, na sessão de especificação.
 
+#### 1.0.6 — 2026-11-05
+
+- A DP-12 foi resolvida em parte no plano da specification `003` e no ADR `0006`. O provedor é OpenAI, a métrica é cosseno e a busca é exata, sem índice HNSW ou IVFFlat.
+- Dimensão, topK, limiar, tamanho de chunk e sobreposição continuam sem padrão de produção até avaliação com exemplos representativos. A coluna `vector(N)` só nasce quando a dimensão estiver configurada.
+- Impacto: a specification `003` passa a permitir a busca quando esses valores vierem da configuração. Nenhuma specification passa a gravar número de embedding no repositório.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
 ## 9. Decisões pendentes
 
 Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementação **NÃO DEVE** transformá-la em comportamento fixo.
@@ -407,7 +414,7 @@ Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementa�
 | DP-09 | Regras fiscais, tabelas vigentes, alíquotas e critérios de enquadramento de NCM, IPI, ICMS, CEST, PIS/COFINS e IBS/CBS. | Especificação de conhecimento e de tratamento, com fonte e vigência. | Não codificar regra fiscal sem essa especificação. |
 | DP-10 | Resolvida no contrato `analise-v1.openapi.yaml` da specification 001. | Especificação da execução do agente | Publicar a resposta no contrato versão 1.0.0. |
 | DP-11 | Comportamento resolvido na specification `003`: versões convivem, o mesmo hash é ignorado e conteúdo diferente na mesma versão é recusado. O tamanho numérico do chunk permanece na DP-12. | Plano técnico da Api.RAG | Não inventar tamanho de chunk nem misturar versões na mesma vigência. |
-| DP-12 | Modelo de embeddings, dimensão, estratégia de busca, topK e limiar, avaliados com exemplos representativos. | Plano técnico da Api.RAG. | Não fixar esses parâmetros como padrão de produção. |
+| DP-12 | Provedor OpenAI, métrica cosseno e busca exata registrados no plano da specification `003` e no ADR `0006`. Dimensão, topK, limiar, tamanho de chunk e sobreposição seguem sem padrão de produção até exemplos representativos. | Plano técnico da Api.RAG | Não gravar esses números no repositório. Não criar índice HNSW nem IVFFlat. A coluna `vector(N)` só nasce quando a dimensão estiver configurada. |
 | DP-13 | Tempos e retentativa resolvidos no plano da specification 001. O nome do modelo permanece configuração obrigatória. | Plano técnico da Api.Agente | Não gravar nome de modelo no código de domínio. |
 | DP-14 | Tabela de preços, moeda e regra de estimativa de custo. | Plano técnico de consumo. | Não gravar custo estimado sem referência da tabela. |
 | DP-15 | Operações expostas pelo servidor A2A e seu contrato. | Especificação de integração, antes da exposição A2A. | Não expor operação A2A não especificada. |
