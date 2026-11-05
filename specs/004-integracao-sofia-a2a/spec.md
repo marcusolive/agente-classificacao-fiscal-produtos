@@ -11,9 +11,9 @@ A Api.Agente é o agente especializado. A SOFIA é o orquestrador e não mora ne
 
 ## Requisitos
 
-- **FR-001**: O Agent Card fica em `/.well-known/agent-card.json`, com a skill `analisar_documentos` e `url` apontando para `/a2a`.
+- **FR-001**: O Agent Card fica em `/.well-known/agent-card.json`, com `protocolVersion` 0.3.0, `preferredTransport` JSONRPC, esquema `bearer` e a skill `analisar_documentos`. A `url` aponta para `/a2a`.
 - **FR-002**: `POST /a2a` aceita somente JSON-RPC 2.0 `message/send`, com `role=user`, `messageId` e um TextPart. O texto é `SolicitacaoAnaliseSofia`.
-- **FR-003**: A tarefa `completed` devolve `ResultadoAnaliseSofia` no artefato `analise-sofia-v1`, com os mesmos `idExecucao` e `idSolicitacao`.
+- **FR-003**: A tarefa tem `kind` `task` e estado `completed`. O artefato `analise-sofia-v1` devolve `ResultadoAnaliseSofia`, com os mesmos `idExecucao` e `idSolicitacao`. `contextId` repete o `idExecucao`.
 - **FR-004**: `versaoContrato` 1.0, UUID, `usuario.nome`, `pergunta` e documentos com `idDocumento`, `nome` e `texto` são obrigatórios. `tipo` e `contexto` são opcionais.
 - **FR-005**: O texto do documento e `contexto.instrucoes` são dado. Não produzem achado nem alteram a análise.
 - **FR-010**: `contexto` pode trazer `empresa`, `uf`, `regimeTributario`, `dataVigencia`, `papel`, `finalidade` e `tipoOperacao`. Se faltar algum, a tarefa pede o campo e não classifica. Esses valores prevalecem sobre o JSON do documento. A intenção executada é somente sugerir NCM.
