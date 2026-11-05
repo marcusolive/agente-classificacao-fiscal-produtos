@@ -10,5 +10,6 @@
 - [x] T06 Aplicar `SofiaBrowser` só quando houver origem configurada
 - [x] T07 Cobrir o fluxo na suíte da Api.Agente e publicar as rotas no Swagger v1
 - [x] T08 Classificar pelo pedido JSON do documento quando o contexto fiscal vier completo, e pedir o campo ausente sem classificar
+- [x] T09 Declarar no card o protocolo 0.3.0, o transporte JSONRPC e o Bearer, e marcar a tarefa com kind task
 
 Fora desta lista: cliente A2A, registry, despacho para outros agentes e Compose da SOFIA.
