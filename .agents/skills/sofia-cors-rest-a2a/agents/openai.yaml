@@ -1,0 +1,3 @@
+interface:
+  display_name: "SOFIA CORS REST A2A"
+  short_description: "Configura CORS e conectividade segura dos agentes INFIS"

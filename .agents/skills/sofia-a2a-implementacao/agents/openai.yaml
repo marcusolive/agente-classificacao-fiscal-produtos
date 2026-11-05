@@ -1,0 +1,3 @@
+interface:
+  display_name: "SOFIA A2A Implementação"
+  short_description: "Implementar A2A real em .NET com Spec Kit."
