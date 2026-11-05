@@ -209,14 +209,24 @@ public static class SofiaEndpoints
 
 public sealed class CartaoAgente
 {
+    public string ProtocolVersion { get; init; } = "0.3.0";
     public required string Name { get; init; }
     public required string Description { get; init; }
     public required string Url { get; init; }
+    public string PreferredTransport { get; init; } = "JSONRPC";
     public string Version { get; init; } = "1.0.0";
     public CapacidadesAgente Capabilities { get; init; } = new(false, false);
+    public Dictionary<string, EsquemaHttp> SecuritySchemes { get; init; } = new() { ["bearer"] = new() };
+    public Dictionary<string, string[]>[] Security { get; init; } = [new() { ["bearer"] = [] }];
     public string[] DefaultInputModes { get; init; } = ["text"];
     public string[] DefaultOutputModes { get; init; } = ["text"];
     public HabilidadeAgente[] Skills { get; init; } = [new()];
+}
+
+public sealed class EsquemaHttp
+{
+    public string Type { get; init; } = "http";
+    public string Scheme { get; init; } = "bearer";
 }
 
 public sealed record CapacidadesAgente(bool Streaming, bool PushNotifications);
@@ -243,6 +253,7 @@ public sealed class TarefaA2A
     public required string ContextId { get; init; }
     public required EstadoTarefa Status { get; init; }
     public required List<ArtefatoA2A> Artifacts { get; init; }
+    public string Kind { get; init; } = "task";
 }
 
 public sealed record EstadoTarefa(string State);

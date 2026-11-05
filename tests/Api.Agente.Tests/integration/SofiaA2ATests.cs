@@ -25,6 +25,7 @@ public class SofiaA2ATests : IClassFixture<FabricaApi>
         var resultado = Resultado(primeiro);
 
         Assert.Equal(primeiro.GetProperty("result").GetProperty("id").GetString(), segundo.GetProperty("result").GetProperty("id").GetString());
+        Assert.Equal("task", primeiro.GetProperty("result").GetProperty("kind").GetString());
         Assert.Equal("completed", primeiro.GetProperty("result").GetProperty("status").GetProperty("state").GetString());
         Assert.Equal("8b2f0ad6-c2e4-4a68-8bdd-20f785bc798e", resultado.GetProperty("idExecucao").GetString());
         Assert.Equal("e1b3a4cb-d729-4bd4-b796-b9c94be07b46", resultado.GetProperty("idSolicitacao").GetString());
@@ -116,6 +117,10 @@ public class SofiaA2ATests : IClassFixture<FabricaApi>
 
         var card = await _fabrica.CreateClient().GetFromJsonAsync<JsonElement>("/.well-known/agent-card.json");
         Assert.Equal("analisar_documentos", card.GetProperty("skills")[0].GetProperty("id").GetString());
+        Assert.Equal("0.3.0", card.GetProperty("protocolVersion").GetString());
+        Assert.Equal("JSONRPC", card.GetProperty("preferredTransport").GetString());
+        Assert.Equal("http", card.GetProperty("securitySchemes").GetProperty("bearer").GetProperty("type").GetString());
+        Assert.Equal("bearer", card.GetProperty("securitySchemes").GetProperty("bearer").GetProperty("scheme").GetString());
         Assert.EndsWith("/a2a", card.GetProperty("url").GetString(), StringComparison.Ordinal);
         Assert.False(card.GetProperty("capabilities").GetProperty("streaming").GetBoolean());
     }

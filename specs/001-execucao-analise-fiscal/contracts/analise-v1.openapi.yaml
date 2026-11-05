@@ -219,16 +219,32 @@ components:
         - url
       type: object
       properties:
+        protocolVersion:
+          type: string
         name:
           type: string
         description:
           type: string
         url:
           type: string
+        preferredTransport:
+          type: string
         version:
           type: string
         capabilities:
           $ref: '#/components/schemas/CapacidadesAgente'
+        securitySchemes:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/EsquemaHttp'
+        security:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                type: string
         defaultInputModes:
           type: array
           items:
@@ -363,6 +379,13 @@ components:
             - string
           format: int32
         message:
+          type: string
+    EsquemaHttp:
+      type: object
+      properties:
+        type:
+          type: string
+        scheme:
           type: string
     EstadoNota:
       enum:
@@ -854,6 +877,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ArtefatoA2A'
+        kind:
+          type: string
     TipoEntrada:
       enum:
         - texto
