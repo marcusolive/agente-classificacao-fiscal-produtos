@@ -1,12 +1,12 @@
 # Implementation Plan: Base de conhecimento da Api.RAG
 
-**Branch**: `003-base-conhecimento-rag` | **Date**: 2026-10-29 | **Spec**: [spec.md](./spec.md)
+**Branch**: `003-base-conhecimento-rag` | **Date**: 2026-10-29 | **Atualizado**: 2026-11-05 | **Spec**: [spec.md](./spec.md)
 
 **Note**: Este plano cobre a Api.RAG. Não cria tarefas e não implementa código.
 
 ## Summary
 
-A Api.RAG grava documento, versão e chunk no PostgreSQL próprio, expõe a administração em REST e responde `consultar_conhecimento` por MCP. A ferramenta recebe texto e vigência e devolve evidência no formato que a Api.Agente já desserializa. Caso corporativo confirmado é gravado e lido na administração. A ferramenta não o devolve. Modelo, dimensão, topK, limiar e tamanho de chunk ficam vazios até avaliação. Sem esses valores, a consulta é falha técnica, não lista vazia.
+A Api.RAG grava documento, versão e chunk no PostgreSQL próprio, expõe a administração em REST e responde `consultar_conhecimento` por MCP. A ferramenta recebe texto e vigência e devolve evidência no formato que a Api.Agente já desserializa. Caso corporativo confirmado é gravado e lido na administração. A ferramenta não o devolve. Com modelo, dimensão, topK e limiar configurados, a busca é exata por cosseno e o embedding sai da OpenAI. Esses números ficam vazios nos arquivos versionados. Sem eles, a consulta é falha técnica, não lista vazia.
 
 ## Technical Context
 
@@ -14,7 +14,7 @@ A Api.RAG grava documento, versão e chunk no PostgreSQL próprio, expõe a admi
 
 **Primary Dependencies**: Npgsql 10.0.3, já fixado no repositório; Pgvector 0.3.2; ModelContextProtocol.AspNetCore 2.3.0, na mesma linha do cliente já usado; PdfPig 0.1.16 para texto de PDF. XML de notas usa a biblioteca padrão do .NET. Sem Entity Framework.
 
-**Storage**: PostgreSQL exclusivo da Api.RAG, connection string `Rag`. A primeira migração cria a extensão `vector`, documento e chunk, sem coluna de embedding. A coluna `vector(N)` e o índice entram numa migração posterior, só quando a dimensão e a métrica tiverem sido avaliadas e registradas.
+**Storage**: PostgreSQL exclusivo da Api.RAG, connection string `Rag`. A primeira migração cria a extensão `vector`, documento e chunk, sem coluna de embedding. Se `Embedding:Dimensao` estiver preenchida, a subida acrescenta `embedding vector(N)` quando a coluna não existe. Dimensão diferente da coluna existente impede a subida. Não há índice HNSW nem IVFFlat.
 
 **Testing**: xUnit em `tests/Api.RAG.Tests`. Ambiente Testing usa repositório em memória e não chama OpenAI nem PostgreSQL. A suíte cobre reingestão, versão isolada, lista vazia depois de busca concluída, fonte rastreável, caso ausente na ferramenta e falha quando a busca não está configurada. O arquivo `contracts/rag-v1.openapi.yaml` será a serialização de `/openapi/v1.json`. O teste de contrato recusa divergência e não regrava o arquivo.
 
@@ -29,11 +29,11 @@ A Api.RAG grava documento, versão e chunk no PostgreSQL próprio, expõe a admi
 - A Api.RAG é dona de documento, chunk e vetor. A Api.Agente continua só com o cliente MCP.
 - Conteúdo ingerido e chunk recuperado são dados. Não alteram chave, faixa nem contrato.
 - A retentativa da chamada de embedding é limitada: 2 tentativas adicionais e 60 segundos, o mesmo teto já fixado para chamada externa de modelo. Os valores ficam em configuração.
-- DP-12 permanece aberta. Este plano não escolhe modelo, dimensão, topK, limiar, métrica nem índice vetorial.
+- A DP-12 escolhe OpenAI, cosseno e busca exata, no ADR 0006. Dimensão, topK, limiar, tamanho de chunk e sobreposição continuam fora dos arquivos versionados.
 - DP-16 não cria biblioteca extra. O projeto Api.RAG já é um dos dois projetos previstos.
 - O limite numérico de arquivo continua vazio. Arquivo sem esse valor é recusado.
 
-Gate de desenho: aprovado para gravar, versionar e administrar. A busca vetorial permanece bloqueada até a avaliação da DP-12.
+Gate de desenho: aprovado para gravar, versionar, administrar e buscar por cosseno quando a configuração estiver completa. Nenhum número de busca entra no repositório.
 
 ## Project Structure
 
@@ -79,16 +79,18 @@ tests/Api.RAG.Tests/
 3. O hash SHA-256 do conteúdo decide: igual ao já gravado ignora; diferente na mesma versão recusa; outra versão convive.
 4. Sem `Embedding:TamanhoChunk`, o texto extraído inteiro vira um único chunk. Com o valor configurado, a segmentação usa esse tamanho e a sobreposição configurada.
 5. A versão fica legível na administração. Ela só fica consultável pela ferramenta quando todos os chunks tiverem embedding e os parâmetros de busca estiverem configurados.
-6. `consultar_conhecimento` filtra o intervalo de vigência, remove a faixa de caso corporativo e devolve a data pedida em cada evidência. A fonte é `origem/identificacao/versao`.
+6. `consultar_conhecimento` filtra o intervalo de vigência, remove a faixa de caso corporativo, exige similaridade de cosseno maior ou igual ao limiar e devolve no máximo topK chunks. A evidência usa a data pedida. A fonte é `origem/identificacao/versao`.
 7. Parâmetro de busca vazio ou falha do provedor devolve erro da ferramenta. A Api.Agente já trata esse erro como falha técnica. Lista vazia só sai de uma busca concluída sem resultado.
 
 ## Configuração
 
 - `Ingestao:Chave`: vazia recusa o POST. Não entra no repositório.
 - `Ingestao:TamanhoMaximoBytes`: vazio recusa PDF e XML.
-- `Embedding:Model`, `Embedding:Dimensao`, `Embedding:TopK`, `Embedding:Limiar`, `Embedding:TamanhoChunk`, `Embedding:Sobreposicao`: vazios. Nenhum recebe número neste plano.
+- `Embedding:Model`, `Embedding:Dimensao`, `Embedding:TopK`, `Embedding:Limiar`, `Embedding:TamanhoChunk`, `Embedding:Sobreposicao`: vazios nos arquivos versionados. O limiar, quando preenchido, é a similaridade de cosseno mínima e precisa estar entre 0 e 1.
 - `Embedding:Tentativas`: 2.
 - `Embedding:TimeoutSegundos`: 60.
+- `OpenAI:ApiKey`: vazia no repositório. O ambiente usa `OpenAI__ApiKey`.
+- `OpenAI:Endpoint`: vazio usa `https://api.openai.com/v1`.
 - `ConnectionStrings:Rag`: vazia fora de produção configurada. Em Testing o repositório é memória.
 
 Segredos ficam no ambiente.
@@ -107,8 +109,8 @@ O documento OpenAPI se chama `v1` e a versão publicada é 1.0.0. Título, descr
 
 ## Fora deste plano
 
-Escolher modelo e dimensão de embedding, métrica, índice, topK e limiar. Recuperar caso corporativo na ferramenta. Memória, custo, papéis e A2A. Schema oficial de XML de notas.
+Gravar nome de modelo, dimensão, topK, limiar, tamanho de chunk ou sobreposição como padrão de produção. Criar índice HNSW ou IVFFlat. Recuperar caso corporativo na ferramenta. Memória, custo, papéis e A2A. Schema oficial de XML de notas.
 
 ## Complexity Tracking
 
-Nenhuma violação da constituição precisa de exceção. A coluna vetorial adiada é a restrição da DP-12, não um desvio.
+Nenhuma violação da constituição precisa de exceção. A coluna sem dimensão fixa na migração é a restrição que restou da DP-12, não um desvio.

@@ -18,9 +18,9 @@ Development escuta `http://localhost:5120` e abre `/swagger`. O documento public
 
 A ferramenta MCP fica em `/mcp`. Na Api.Agente, `Conhecimento:McpUrl` aponta para `http://localhost:5120/mcp` quando a base local for a de Development.
 
-## O que responde antes da DP-12
+## O que a busca exige
 
-Texto com origem, identificação, versão, faixa e vigência pode ser gravado e lido em `GET /v1/documentos/{documentoId}`. PDF e XML ficam recusados enquanto `Ingestao:TamanhoMaximoBytes` estiver vazio. `consultar_conhecimento` responde erro enquanto modelo, dimensão, topK ou limiar estiverem vazios.
+Texto com origem, identificação, versão, faixa e vigência pode ser gravado e lido em `GET /v1/documentos/{documentoId}`. PDF e XML ficam recusados enquanto `Ingestao:TamanhoMaximoBytes` estiver vazio. `consultar_conhecimento` responde erro enquanto modelo, dimensão, topK ou limiar estiverem vazios, ou quando o limiar estiver fora de 0 a 1. Com esses valores no ambiente, a busca é exata por cosseno e o embedding sai da OpenAI. A chave fica em `OpenAI__ApiKey`. Os arquivos versionados continuam sem esses números.
 
 ## Teste
 

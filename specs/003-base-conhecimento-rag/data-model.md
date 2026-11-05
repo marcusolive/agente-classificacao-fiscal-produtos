@@ -16,7 +16,7 @@ Formatos: `texto`, `pdf`, `xmlNotas`.
 
 ## Chunk
 
-Pertence a um documento. Guarda o texto, a posição na sequência, a localização quando existir e o hash do documento. A localização de PDF é a página, quando a extração a informar. A coluna de embedding fica fora da primeira migração.
+Pertence a um documento. Guarda o texto, a posição na sequência, a localização quando existir, o hash do documento e o vetor quando a chamada de embedding tiver concluído. A localização de PDF é a página, quando a extração a informar. A primeira migração não cria a coluna. A subida acrescenta `embedding vector(N)` só quando a dimensão está configurada.
 
 Dois chunks de versões diferentes não compartilham identidade. A consulta por uma data seleciona o documento cujo intervalo contém a data e devolve cada chunk com a fonte da própria versão.
 
@@ -32,4 +32,4 @@ Não é tabela. É o JSON da ferramenta: fonte versionada, faixa, trecho, locali
 
 ## Fora deste modelo
 
-Dimensão do vetor, métrica, índice, topK e limiar. Eles não têm coluna nem parâmetro padrão até a avaliação da DP-12.
+Nome do modelo, dimensão, topK, limiar, tamanho de chunk e sobreposição como padrão de produção. Índice HNSW ou IVFFlat. A métrica desta etapa é cosseno e a busca é exata.

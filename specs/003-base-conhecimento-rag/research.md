@@ -32,6 +32,14 @@
 
 **Alternativas rejeitadas**: Busca por texto livre como substituto silencioso do vetor. Escolher HNSW ou IVFFlat agora.
 
+## 6. Busca quando a configuração existe
+
+**Decisão**: Provedor OpenAI, métrica de cosseno e busca exata, registradas no ADR 0006 em 2026-11-05. O limiar é a similaridade mínima, de 0 a 1. A coluna `vector(N)` nasce na subida com a dimensão configurada. Nome do modelo, dimensão, topK, limiar, tamanho de chunk e sobreposição continuam fora dos arquivos versionados.
+
+**Racional**: O produto escolheu o provedor e a métrica sem transformar um número não avaliado em padrão de produção. A busca exata evita parâmetros de índice que ainda não têm carga medida.
+
+**Alternativas rejeitadas**: Fixar um modelo e uma dimensão na migração. Criar HNSW ou IVFFlat nesta etapa. Tratar lista vazia como busca indisponível.
+
 ## 5. Retentativa
 
 **Decisão**: A chamada de embedding usa 2 tentativas adicionais e 60 segundos, em configuração.
