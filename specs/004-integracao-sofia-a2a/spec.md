@@ -16,6 +16,8 @@ A Api.Agente é o agente especializado. A SOFIA é o orquestrador e não mora ne
 - **FR-003**: A tarefa `completed` devolve `ResultadoAnaliseSofia` no artefato `analise-sofia-v1`, com os mesmos `idExecucao` e `idSolicitacao`.
 - **FR-004**: `versaoContrato` 1.0, UUID, `usuario.nome`, `pergunta` e documentos com `idDocumento`, `nome` e `texto` são obrigatórios. `tipo` e `contexto` são opcionais.
 - **FR-005**: O texto do documento e `contexto.instrucoes` são dado. Não produzem achado nem alteram a análise.
+- **FR-010**: `contexto` pode trazer `empresa`, `uf`, `regimeTributario`, `dataVigencia`, `papel`, `finalidade` e `tipoOperacao`. Se faltar algum, a tarefa pede o campo e não classifica. Esses valores prevalecem sobre o JSON do documento. A intenção executada é somente sugerir NCM.
+- **FR-011**: O `texto` de cada documento é o JSON do pedido de análise já aceito em `/v1/analises`. Divergência vira achado com trecho já presente na evidência. Dado essencial ausente deixa a tarefa parcial, sem achado inventado. Falha técnica deixa a tarefa com status erro.
 - **FR-006**: A mesma `idSolicitacao` reutiliza a tarefa já respondida. A memória não grava o nome do usuário nem o texto do documento.
 - **FR-007**: Sem `Authorization: Bearer` igual a `Sofia:Chave`, `/a2a` responde 401. Chave vazia recusa. O Agent Card permanece público.
 - **FR-008**: `Cors:AllowedOrigins` vazio não habilita CORS. Com origens, a política `SofiaBrowser` vale para o card e para `/a2a`, nos métodos GET, POST e OPTIONS e nos cabeçalhos `Content-Type` e `Authorization`.
