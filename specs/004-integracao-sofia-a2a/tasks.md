@@ -9,5 +9,6 @@
 - [x] T05 Exigir Bearer em `/a2a` e manter o card público
 - [x] T06 Aplicar `SofiaBrowser` só quando houver origem configurada
 - [x] T07 Cobrir o fluxo na suíte da Api.Agente e publicar as rotas no Swagger v1
+- [x] T08 Classificar pelo pedido JSON do documento quando o contexto fiscal vier completo, e pedir o campo ausente sem classificar
 
 Fora desta lista: cliente A2A, registry, despacho para outros agentes e Compose da SOFIA.
