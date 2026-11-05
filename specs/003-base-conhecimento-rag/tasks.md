@@ -95,6 +95,19 @@
 
 ---
 
+## Phase 8: Busca exata por cosseno
+
+**Purpose**: Quando a configuração estiver completa, a ferramenta ordena por similaridade de cosseno. Os números continuam fora do repositório.
+
+- [x] T022 Registrar no ADR 0006 e na constituição 1.0.6 que o provedor é OpenAI, a métrica é cosseno e a busca é exata, sem índice e sem número de produção
+- [x] T023 Gerar embeddings na OpenAI com a chave do ambiente, repetindo no máximo as tentativas já configuradas, e recusar dimensão diferente da configurada
+- [x] T024 Criar `embedding vector(N)` só quando `Embedding:Dimensao` estiver preenchida e consultar por cosseno, vigência e topK, sem caso corporativo
+- [x] T025 Cobrir similaridade, limiar, topK, retentativa e dimensão divergente na suíte, sem chamar a OpenAI real
+
+**Checkpoint**: Sem modelo, dimensão, topK ou limiar, a consulta continua em erro. Com eles no teste, a busca devolve o chunk mais próximo acima do limiar.
+
+---
+
 ## Dependencies
 
 - A Phase 2 depende da Phase 1
@@ -112,7 +125,8 @@
 
 ## Notes
 
-- Não escolher modelo, dimensão, topK, limiar, métrica nem índice vetorial
+- Não gravar modelo, dimensão, topK, limiar, tamanho de chunk nem sobreposição como padrão de produção
+- A métrica desta etapa é cosseno e a busca é exata, sem índice HNSW ou IVFFlat
 - Não criar coluna `vector(N)` nesta lista
 - Não devolver caso corporativo em `consultar_conhecimento`
 - Chave e connection string permanecem vazias nos arquivos versionados
