@@ -44,8 +44,8 @@
 
 **Independent Test**: Ingerir um texto, lê-lo na administração, repetir o mesmo conteúdo e receber `ignorado`.
 
-- [ ] T010 [P] [US1] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/IngestaoTextoTests.cs` para gravação, hash repetido e conteúdo diferente na mesma versão
-- [ ] T011 [US1] Implementar `POST /v1/documentos` e `GET /v1/documentos/{documentoId}` com hash SHA-256, fonte `origem/identificacao/versao` e um único chunk quando `Embedding:TamanhoChunk` estiver vazio
+- [x] T010 [P] [US1] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/IngestaoTextoTests.cs` para gravação, hash repetido e conteúdo diferente na mesma versão
+- [x] T011 [US1] Implementar `POST /v1/documentos` e `GET /v1/documentos/{documentoId}` com hash SHA-256, fonte `origem/identificacao/versao` e um único chunk quando `Embedding:TamanhoChunk` estiver vazio
 
 ---
 
@@ -55,8 +55,8 @@
 
 **Independent Test**: Duas versões com intervalos diferentes. A data de uma não devolve a fonte da outra. Sem parâmetro de busca, a ferramenta volta erro.
 
-- [ ] T012 [P] [US2] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/ConsultaVigenciaTests.cs` para vigência isolada, lista vazia de busca concluída e erro quando modelo, dimensão, topK ou limiar estiverem vazios
-- [ ] T013 [US2] Expor `consultar_conhecimento` em `/mcp`, com `texto` e `vigencia`, evidência na data pedida e sem a faixa de caso corporativo
+- [x] T012 [P] [US2] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/ConsultaVigenciaTests.cs` para vigência isolada, lista vazia de busca concluída e erro quando modelo, dimensão, topK ou limiar estiverem vazios
+- [x] T013 [US2] Expor `consultar_conhecimento` em `/mcp`, com `texto` e `vigencia`, evidência na data pedida e sem a faixa de caso corporativo
 
 ---
 
@@ -66,8 +66,8 @@
 
 **Independent Test**: Gravar o caso da empresa A, lê-lo no GET e confirmar que a ferramenta não o lista.
 
-- [ ] T014 [P] [US3] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/CasoConfirmadoTests.cs` para vínculo completo, campo ausente e ausência do caso na ferramenta
-- [ ] T015 [US3] Exigir decisão, papel, data, empresa e execução de origem na faixa `casoCorporativoConfirmado`, e listar versões em `GET /v1/documentos`
+- [x] T014 [P] [US3] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/CasoConfirmadoTests.cs` para vínculo completo, campo ausente e ausência do caso na ferramenta
+- [x] T015 [US3] Exigir decisão, papel, data, empresa e execução de origem na faixa `casoCorporativoConfirmado`, e listar versões em `GET /v1/documentos`
 
 ---
 
@@ -77,8 +77,8 @@
 
 **Independent Test**: Tipo fora da lista recebe recusa. Com limite vazio, PDF não grava chunk.
 
-- [ ] T016 [P] [US4] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/FormatoDocumentoTests.cs` para formato recusado, arquivo sem texto e arquivo sem `Ingestao:TamanhoMaximoBytes`
-- [ ] T017 [US4] Extrair texto de PDF com PdfPig e texto de XML de notas com a biblioteca padrão, sem XSD e sem leitura de NF-e completa
+- [x] T016 [P] [US4] Escrever o teste que falha em `tests/Api.RAG.Tests/integration/FormatoDocumentoTests.cs` para formato recusado, arquivo sem texto e arquivo sem `Ingestao:TamanhoMaximoBytes`
+- [x] T017 [US4] Extrair texto de PDF com PdfPig e texto de XML de notas com a biblioteca padrão, sem XSD e sem leitura de NF-e completa
 
 ---
 
@@ -86,10 +86,10 @@
 
 **Purpose**: A documentação publicada fica completa e não diverge do arquivo do repositório
 
-- [ ] T018 Completar descrição objetiva de cada operação, resposta e propriedade ainda sem texto, incluindo a frase de que a consulta da análise é a ferramenta MCP e não uma rota REST
-- [ ] T019 Escrever o teste de contrato que confere versão 1.0.0, caminhos `/v1/documentos` e `/v1/documentos/{documentoId}`, ausência de rota MCP no OpenAPI, `/swagger/index.js` apontando para `/openapi/v1.json` e a raiz redirecionando para `/swagger`
-- [ ] T020 Gerar `specs/003-base-conhecimento-rag/contracts/rag-v1.openapi.yaml` a partir de `/openapi/v1.json` e travar o teste para igualdade, sem regravar o arquivo na suíte
-- [ ] T021 Atualizar `quickstart.md` com o comando da suíte e o endereço do documento publicado
+- [x] T018 Completar descrição objetiva de cada operação, resposta e propriedade ainda sem texto, incluindo a frase de que a consulta da análise é a ferramenta MCP e não uma rota REST
+- [x] T019 Escrever o teste de contrato que confere versão 1.0.0, caminhos `/v1/documentos` e `/v1/documentos/{documentoId}`, ausência de rota MCP no OpenAPI, `/swagger/index.js` apontando para `/openapi/v1.json` e a raiz redirecionando para `/swagger`
+- [x] T020 Gerar `specs/003-base-conhecimento-rag/contracts/rag-v1.openapi.yaml` a partir de `/openapi/v1.json` e travar o teste para igualdade, sem regravar o arquivo na suíte
+- [x] T021 Atualizar `quickstart.md` com o comando da suíte e o endereço do documento publicado
 
 **Checkpoint**: `dotnet test tests/Api.RAG.Tests/Api.RAG.Tests.csproj` passa. O YAML confere com o Swagger.
 
