@@ -19,3 +19,12 @@ public sealed class OpcoesConhecimento
     public string McpUrl { get; set; } = "";
     public string Ferramenta { get; set; } = "consultar_conhecimento";
 }
+
+public sealed class OpcoesSofia
+{
+    public string Chave { get; set; } = "";
+    public string IdAgente { get; set; } = "agente-fiscal";
+    public string Nome { get; set; } = "Agente Fiscal INFIS";
+    public string Url { get; set; } = "";
+    public long? TamanhoMaximoBytes { get; set; }
+}

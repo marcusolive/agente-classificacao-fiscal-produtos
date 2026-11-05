@@ -10,5 +10,5 @@ public static class ContratoApi
     public const string Titulo = "Agente de classificação fiscal de produtos";
 
     public const string Descricao =
-        "Documento v1. A análise de itens permanece no contrato 1.0.0 e o contexto do item prevalece sobre o da execução. A confirmação de caso é o contrato 1.1.0 e não grava precedente. Não atesta conformidade fiscal. Uma mudança incompatível será publicada como v2.";
+        "Documento v1. A análise de itens permanece no contrato 1.0.0 e o contexto do item prevalece sobre o da execução. A confirmação de caso é o contrato 1.1.0 e não grava precedente. A SOFIA chama o Agent Card e message/send em A2A JSON-RPC 0.3, com contrato de negócio 1.0. Não atesta conformidade fiscal. Uma mudança incompatível será publicada como v2.";
 }
