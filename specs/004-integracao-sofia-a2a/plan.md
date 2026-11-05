@@ -32,6 +32,7 @@ A Api.Agente publica o Agent Card e atende `message/send` em `/a2a`. O contrato 
 3. O TextPart é validado como SOFIA 1.0.
 4. A tarefa concluída devolve a análise fixa de ausência de achado e a lista dos `idDocumento` em `observacoes`.
 5. Erro de JSON-RPC volta no campo `error`, com HTTP 200. Falha de autenticação volta 401.
+6. Com o contexto fiscal completo, cada documento é desserializado como pedido de análise. O contexto da SOFIA substitui empresa, UF, regime, vigência, papel, finalidade e tipo de operação. A intenção gravada é `sugerirNcm`.
 
 ## Configuração
 
