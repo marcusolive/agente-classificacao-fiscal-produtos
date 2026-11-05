@@ -1,0 +1,374 @@
+openapi: '3.1.1'
+info:
+  title: Base de conhecimento da Api.RAG
+  description: 'Documento v1 da Api.RAG. A administração REST grava e lê documentos versionados. A consulta da análise é a ferramenta MCP consultar_conhecimento, com texto e vigência, e não é uma rota REST. A ferramenta não devolve caso corporativo. Não atesta conformidade fiscal. Uma mudança incompatível será publicada como v2.'
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /v1/documentos:
+    post:
+      tags:
+        - Documentos v1
+      summary: Ingere uma versão de documento.
+      description: 'Exige a chave X-Chave-Ingestao. Grava texto, PDF ou XML de notas com origem, identificação e versão. Hash igual é ignorado. Conteúdo diferente na mesma versão é recusado. A consulta da análise não é esta rota: ela é a ferramenta MCP consultar_conhecimento.'
+      operationId: CriarDocumentoV1
+      parameters:
+        - name: X-Chave-Ingestao
+          in: header
+          description: Chave de ingestão configurada no ambiente. Chave vazia recusa o pedido.
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PedidoDocumento'
+        required: true
+      responses:
+        '200':
+          description: Documento gravado ou ignorado por hash igual. A versão só fica consultável quando a busca vetorial existir.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoIngestao'
+        '400':
+          description: 'Chave ausente, campo obrigatório ausente, formato não aceito, arquivo sem limite ou conteúdo diferente na mesma versão.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResposta'
+    get:
+      tags:
+        - Documentos v1
+      summary: Lista as versões de um documento.
+      description: Filtra por origem e identificação. Cada versão permanece separada.
+      operationId: ListarDocumentosV1
+      parameters:
+        - name: origem
+          in: query
+          description: Origem do documento.
+          required: true
+          schema:
+            type: string
+        - name: identificacao
+          in: query
+          description: Identificação do documento dentro da origem.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Versões da mesma origem e identificação, sem misturar o texto delas.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Documento'
+        '400':
+          description: origem e identificacao são obrigatórias.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResposta'
+  '/v1/documentos/{documentoId}':
+    get:
+      tags:
+        - Documentos v1
+      summary: Lê uma versão gravada.
+      description: 'Devolve o documento e os chunks dessa versão, inclusive o caso confirmado.'
+      operationId: ObterDocumentoV1
+      parameters:
+        - name: documentoId
+          in: path
+          description: Identificador devolvido na ingestão.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Documento encontrado, com os chunks da versão.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Documento'
+        '404':
+          description: Documento não encontrado.
+components:
+  schemas:
+    Chunk:
+      required:
+        - texto
+        - hashDocumento
+      type: object
+      properties:
+        chunkId:
+          type: string
+          description: Identificador do trecho.
+          format: uuid
+        documentoId:
+          type: string
+          description: Documento ao qual o trecho pertence.
+          format: uuid
+        posicao:
+          pattern: '^-?(?:0|[1-9]\d*)$'
+          type:
+            - integer
+            - string
+          description: 'Posição do trecho na versão, começando em zero.'
+          format: int32
+        texto:
+          type: string
+          description: 'Texto do trecho. É dado, não instrução.'
+        localizacao:
+          type:
+            - 'null'
+            - string
+          description: 'Página ou localização informada, quando existir.'
+        hashDocumento:
+          type: string
+          description: Hash do documento de origem deste trecho.
+      description: Trecho de uma única versão do documento.
+    DecisaoCaso:
+      enum:
+        - aceitar
+        - corrigir
+        - null
+      description: Decisão do caso confirmado.
+    Documento:
+      required:
+        - origem
+        - identificacao
+        - versao
+        - hash
+      type: object
+      properties:
+        documentoId:
+          type: string
+          description: Identificador gerado pelo sistema.
+          format: uuid
+        origem:
+          type: string
+          description: Origem do documento.
+        identificacao:
+          type: string
+          description: Identificação do documento dentro da origem.
+        versao:
+          type: string
+          description: Versão desta cópia. Conteúdo diferente exige outra versão.
+        faixa:
+          description: Faixa de autoridade informada na ingestão.
+          $ref: '#/components/schemas/FaixaAutoridade'
+        vigenciaInicial:
+          type: string
+          description: Início do intervalo de vigência.
+          format: date
+        vigenciaFinal:
+          type:
+            - 'null'
+            - string
+          description: Fim do intervalo. Vazio significa vigência aberta.
+          format: date
+        formato:
+          description: Formato do conteúdo original.
+          $ref: '#/components/schemas/FormatoDocumento'
+        hash:
+          type: string
+          description: 'SHA-256 do conteúdo, em hexadecimal.'
+        estado:
+          description: 'gravado, ignorado, recusado ou falha técnica.'
+          $ref: '#/components/schemas/EstadoDocumento'
+        fonte:
+          type:
+            - 'null'
+            - string
+          description: Fonte no formato origem/identificacao/versao.
+        consultavel:
+          type: boolean
+          description: Verdadeiro só quando a busca vetorial estiver configurada e os embeddings existirem.
+        ncm:
+          type:
+            - 'null'
+            - string
+          description: NCM informada na ingestão. A Api.RAG não extrai código do texto.
+        tributos:
+          type: object
+          additionalProperties:
+            type: string
+          description: 'Tributos informados na ingestão, por nome.'
+        decisao:
+          oneOf:
+            - type: 'null'
+            - description: 'Decisão do caso confirmado, quando a faixa for essa.'
+              $ref: '#/components/schemas/DecisaoCaso'
+        papelAutoridade:
+          type:
+            - 'null'
+            - string
+          description: Papel informado na confirmação do caso.
+        dataConfirmacao:
+          type:
+            - 'null'
+            - string
+          description: Data da confirmação do caso.
+          format: date
+        empresa:
+          type:
+            - 'null'
+            - string
+          description: Empresa da execução de origem do caso.
+        execucaoOrigem:
+          type:
+            - 'null'
+            - string
+          description: Execução de origem do caso.
+          format: uuid
+        chunks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Chunk'
+          description: 'Trechos desta versão, na ordem de leitura.'
+      description: Versão de um documento da base. Chunks desta versão não se misturam com outra.
+    ErroResposta:
+      required:
+        - erro
+      type: object
+      properties:
+        erro:
+          type: string
+          description: Motivo da recusa.
+      description: 'Recusa da ingestão, antes de gravar uma versão nova.'
+    EstadoDocumento:
+      enum:
+        - gravado
+        - ignorado
+        - recusado
+        - falhaTecnica
+      description: 'gravado, ignorado ou falha técnica.'
+    FaixaAutoridade:
+      enum:
+        - legislacaoVigente
+        - notasRgi
+        - casoCorporativoConfirmado
+        - textoFornecedor
+        - null
+      description: Faixa de autoridade. Somente as quatro faixas já decididas.
+    FormatoDocumento:
+      enum:
+        - texto
+        - pdf
+        - xmlNotas
+        - null
+      description: 'texto, pdf ou xmlNotas.'
+    PedidoDocumento:
+      type: object
+      properties:
+        origem:
+          type:
+            - 'null'
+            - string
+          description: Origem do documento.
+        identificacao:
+          type:
+            - 'null'
+            - string
+          description: Identificação do documento dentro da origem.
+        versao:
+          type:
+            - 'null'
+            - string
+          description: Versão. Conteúdo diferente na mesma versão é recusado.
+        faixa:
+          oneOf:
+            - type: 'null'
+            - description: Faixa de autoridade. Somente as quatro faixas já decididas.
+              $ref: '#/components/schemas/FaixaAutoridade'
+        vigenciaInicial:
+          type:
+            - 'null'
+            - string
+          description: Início da vigência.
+          format: date
+        vigenciaFinal:
+          type:
+            - 'null'
+            - string
+          description: Fim da vigência. Vazio deixa o intervalo aberto.
+          format: date
+        formato:
+          oneOf:
+            - type: 'null'
+            - description: 'texto, pdf ou xmlNotas.'
+              $ref: '#/components/schemas/FormatoDocumento'
+        conteudo:
+          type:
+            - 'null'
+            - string
+          description: 'Texto puro, quando o formato é texto.'
+        arquivo:
+          type:
+            - 'null'
+            - string
+          description: 'PDF ou XML de notas, em Base64.'
+        ncm:
+          type:
+            - 'null'
+            - string
+          description: NCM informada pela origem. A Api.RAG não extrai código do texto.
+        tributos:
+          type:
+            - 'null'
+            - object
+          additionalProperties:
+            type: string
+          description: Tributos informados pela origem.
+        decisao:
+          oneOf:
+            - type: 'null'
+            - description: Decisão do caso confirmado.
+              $ref: '#/components/schemas/DecisaoCaso'
+        papelAutoridade:
+          type:
+            - 'null'
+            - string
+          description: Papel informado na confirmação do caso.
+        dataConfirmacao:
+          type:
+            - 'null'
+            - string
+          description: Data da confirmação do caso.
+          format: date
+        empresa:
+          type:
+            - 'null'
+            - string
+          description: Empresa da execução de origem.
+        execucaoOrigem:
+          type:
+            - 'null'
+            - string
+          description: Execução de origem do caso.
+          format: uuid
+      description: Pedido de ingestão de uma versão. O texto informado não altera regra do sistema.
+    ResultadoIngestao:
+      required:
+        - fonte
+      type: object
+      properties:
+        documentoId:
+          type: string
+          description: Identificador da versão gravada.
+          format: uuid
+        fonte:
+          type: string
+          description: Fonte no formato origem/identificacao/versao.
+        estado:
+          description: 'gravado, ignorado ou falha técnica.'
+          $ref: '#/components/schemas/EstadoDocumento'
+        consultavel:
+          type: boolean
+          description: Verdadeiro só quando a busca vetorial e os embeddings existirem.
+      description: Resultado da ingestão. Não declara a versão consultável enquanto a busca vetorial não existir.
+tags:
+  - name: Documentos v1
