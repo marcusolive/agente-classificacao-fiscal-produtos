@@ -86,4 +86,7 @@ public sealed class Chunk
 
     [Description("Hash do documento de origem deste trecho.")]
     public required string HashDocumento { get; set; }
+
+    [Description("Vetor do trecho. Só existe depois da chamada de embedding e não é código fiscal.")]
+    public float[]? Embedding { get; set; }
 }

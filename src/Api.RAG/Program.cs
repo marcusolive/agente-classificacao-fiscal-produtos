@@ -9,6 +9,7 @@ using Microsoft.OpenApi;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<OpcoesIngestao>(builder.Configuration.GetSection("Ingestao"));
 builder.Services.Configure<OpcoesEmbedding>(builder.Configuration.GetSection("Embedding"));
+builder.Services.Configure<OpcoesOpenAi>(builder.Configuration.GetSection("OpenAI"));
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
     o.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
@@ -16,9 +17,10 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 
 var testando = builder.Environment.IsEnvironment("Testing");
 var conexao = builder.Configuration.GetConnectionString("Rag");
+var dimensao = builder.Configuration.GetValue<int?>("Embedding:Dimensao");
 if (!testando && !string.IsNullOrWhiteSpace(conexao))
 {
-    builder.Services.AddSingleton<IRepositorioDocumento>(_ => new PostgresRepositorioDocumento(conexao));
+    builder.Services.AddSingleton<IRepositorioDocumento>(_ => new PostgresRepositorioDocumento(conexao, dimensao));
 }
 else
 {
@@ -28,7 +30,8 @@ else
 builder.Services.AddSingleton<ValidadorIngestao>();
 builder.Services.AddSingleton<ExtratorTexto>();
 builder.Services.AddSingleton<Segmentador>();
-builder.Services.AddSingleton<IProvedorEmbedding, ProvedorEmbeddingIndisponivel>();
+builder.Services.AddHttpClient(ProvedorEmbeddingOpenAi.Cliente);
+builder.Services.AddSingleton<IProvedorEmbedding, ProvedorEmbeddingOpenAi>();
 builder.Services.AddSingleton<IngestaoDocumento>();
 builder.Services.AddSingleton<ConsultaConhecimento>();
 builder.Services.AddMcpServer().WithHttpTransport().WithToolsFromAssembly();

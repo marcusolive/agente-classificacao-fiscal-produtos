@@ -3,7 +3,10 @@ using Microsoft.Extensions.Options;
 
 namespace Api.RAG.Application;
 
-public sealed class ConsultaConhecimento(IRepositorioDocumento repositorio, IOptions<OpcoesEmbedding> opcoes)
+public sealed class ConsultaConhecimento(
+    IRepositorioDocumento repositorio,
+    IProvedorEmbedding embedding,
+    IOptions<OpcoesEmbedding> opcoes)
 {
     public async Task<IReadOnlyList<EvidenciaConsultada>> ConsultarAsync(string? texto, DateOnly vigencia, CancellationToken ct)
     {
@@ -17,29 +20,12 @@ public sealed class ConsultaConhecimento(IRepositorioDocumento repositorio, IOpt
             throw new BuscaIndisponivelException("texto é obrigatório.");
         }
 
-        var documentos = await repositorio.ListarTodosAsync(ct);
-        var evidencias = new List<EvidenciaConsultada>();
-        foreach (var documento in documentos.Where(d => Serve(d, vigencia)))
+        var consulta = await embedding.IncorporarConsultaAsync(texto, ct);
+        if (consulta.Length != opcoes.Value.Dimensao)
         {
-            evidencias.AddRange(documento.Chunks.Select(chunk => new EvidenciaConsultada
-            {
-                Fonte = documento.Fonte,
-                FaixaAutoridade = documento.Faixa,
-                Trecho = chunk.Texto,
-                Localizacao = chunk.Localizacao,
-                Vigencia = vigencia,
-                Ncm = documento.Ncm,
-                Tributos = documento.Tributos
-            }));
+            throw new BuscaIndisponivelException("A dimensão do embedding não confere.");
         }
 
-        return evidencias.Take(opcoes.Value.TopK!.Value).ToList();
+        return await repositorio.BuscarAsync(consulta, vigencia, opcoes.Value.TopK!.Value, opcoes.Value.Limiar!.Value, ct);
     }
-
-    private static bool Serve(Documento documento, DateOnly vigencia) =>
-        documento.Consultavel
-        && documento.Estado == EstadoDocumento.Gravado
-        && documento.Faixa != FaixaAutoridade.CasoCorporativoConfirmado
-        && documento.VigenciaInicial <= vigencia
-        && (documento.VigenciaFinal is null || documento.VigenciaFinal >= vigencia);
 }

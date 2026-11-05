@@ -39,13 +39,21 @@ public sealed class IngestaoDocumento(
             try
             {
                 await embedding.IncorporarAsync(documento, ct);
-                documento.Consultavel = documento.Chunks.Count > 0;
-                documento.Estado = EstadoDocumento.Gravado;
+                var dimensao = opcoes.Value.Dimensao!.Value;
+                var pronto = documento.Chunks.Count > 0
+                    && documento.Chunks.All(c => c.Embedding is { } vetor && vetor.Length == dimensao);
+                documento.Consultavel = pronto;
+                documento.Estado = pronto ? EstadoDocumento.Gravado : EstadoDocumento.FalhaTecnica;
+                if (!pronto)
+                {
+                    LimparVetores(documento);
+                }
             }
             catch (BuscaIndisponivelException)
             {
                 documento.Consultavel = false;
                 documento.Estado = EstadoDocumento.FalhaTecnica;
+                LimparVetores(documento);
             }
         }
 
@@ -137,7 +145,15 @@ public sealed class IngestaoDocumento(
         !string.IsNullOrWhiteSpace(opcoes.Model)
         && opcoes.Dimensao is > 0
         && opcoes.TopK is > 0
-        && opcoes.Limiar is not null;
+        && opcoes.Limiar is >= 0 and <= 1;
+
+    private static void LimparVetores(Documento documento)
+    {
+        foreach (var chunk in documento.Chunks)
+        {
+            chunk.Embedding = null;
+        }
+    }
 
     private static string? Texto(string? valor) =>
         string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();

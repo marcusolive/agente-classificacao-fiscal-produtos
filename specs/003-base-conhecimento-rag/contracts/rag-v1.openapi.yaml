@@ -129,6 +129,17 @@ components:
         hashDocumento:
           type: string
           description: Hash do documento de origem deste trecho.
+        embedding:
+          type:
+            - 'null'
+            - array
+          items:
+            pattern: '^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$'
+            type:
+              - number
+              - string
+            format: float
+          description: Vetor do trecho. Só existe depois da chamada de embedding e não é código fiscal.
       description: Trecho de uma única versão do documento.
     DecisaoCaso:
       enum:

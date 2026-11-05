@@ -3,19 +3,37 @@ using Api.RAG.Application;
 using Api.RAG.Domain;
 using Npgsql;
 using NpgsqlTypes;
+using Pgvector;
+using Pgvector.Npgsql;
 
 namespace Api.RAG.Infrastructure;
 
-public sealed class PostgresRepositorioDocumento(string conexao) : IRepositorioDocumento
+public sealed class PostgresRepositorioDocumento : IRepositorioDocumento, IDisposable
 {
+    private readonly NpgsqlDataSource _fonte;
+    private readonly int? _dimensao;
+
+    public PostgresRepositorioDocumento(string conexao, int? dimensao)
+    {
+        var construtor = new NpgsqlDataSourceBuilder(conexao);
+        construtor.UseVector();
+        _fonte = construtor.Build();
+        _dimensao = dimensao is > 0 ? dimensao : null;
+    }
+
+    public void Dispose() => _fonte.Dispose();
+
     public async Task GarantirEsquemaAsync(CancellationToken ct)
     {
         var caminho = Path.Combine(AppContext.BaseDirectory, "Infrastructure", "Persistence", "001_documento.sql");
         var sql = await File.ReadAllTextAsync(caminho, ct);
-        await using var conn = new NpgsqlConnection(conexao);
-        await conn.OpenAsync(ct);
+        await using var conn = await AbrirAsync(ct);
         await using var cmd = new NpgsqlCommand(sql, conn);
         await cmd.ExecuteNonQueryAsync(ct);
+        if (_dimensao is int dimensao)
+        {
+            await GarantirColunaAsync(conn, dimensao, ct);
+        }
     }
 
     public Task<Documento?> ObterAsync(Guid documentoId, CancellationToken ct) =>
@@ -69,6 +87,63 @@ public sealed class PostgresRepositorioDocumento(string conexao) : IRepositorioD
             {
                 lista.Add(documento);
             }
+        }
+
+        return lista;
+    }
+
+    public async Task<IReadOnlyList<EvidenciaConsultada>> BuscarAsync(
+        float[] consulta,
+        DateOnly vigencia,
+        int topK,
+        double limiar,
+        CancellationToken ct)
+    {
+        if (_dimensao is null)
+        {
+            throw new BuscaIndisponivelException("A busca vetorial não está configurada.");
+        }
+
+        const string sql = """
+            SELECT d.fonte, d.faixa, d.conteudo::text, c.texto, c.localizacao
+            FROM chunk c
+            JOIN documento d ON d.documento_id = c.documento_id
+            WHERE d.consultavel
+              AND d.estado = 'Gravado'
+              AND d.faixa <> 'CasoCorporativoConfirmado'
+              AND d.vigencia_inicial <= @data
+              AND (d.vigencia_final IS NULL OR d.vigencia_final >= @data)
+              AND c.embedding IS NOT NULL
+              AND 1 - (c.embedding <=> @consulta) >= @limiar
+            ORDER BY c.embedding <=> @consulta, d.fonte, c.posicao
+            LIMIT @topk
+            """;
+        await using var conn = await AbrirAsync(ct);
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("data", vigencia);
+        cmd.Parameters.AddWithValue("consulta", new Vector(consulta));
+        cmd.Parameters.AddWithValue("limiar", limiar);
+        cmd.Parameters.AddWithValue("topk", topK);
+        var lista = new List<EvidenciaConsultada>();
+        await using var leitor = await cmd.ExecuteReaderAsync(ct);
+        while (await leitor.ReadAsync(ct))
+        {
+            var documento = JsonSerializer.Deserialize<Documento>(leitor.GetString(2), JsonDaBase.Opcoes);
+            if (!Enum.TryParse<FaixaAutoridade>(leitor.GetString(1), out var faixa))
+            {
+                continue;
+            }
+
+            lista.Add(new EvidenciaConsultada
+            {
+                Fonte = leitor.GetString(0),
+                FaixaAutoridade = faixa,
+                Trecho = leitor.GetString(3),
+                Localizacao = leitor.IsDBNull(4) ? null : leitor.GetString(4),
+                Vigencia = vigencia,
+                Ncm = documento?.Ncm,
+                Tributos = documento?.Tributos ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            });
         }
 
         return lista;
@@ -138,18 +213,29 @@ public sealed class PostgresRepositorioDocumento(string conexao) : IRepositorioD
 
         foreach (var chunk in documento.Chunks)
         {
-            await using var inserir = new NpgsqlCommand(
-                """
+            var sqlChunk = _dimensao is null
+                ? """
                 INSERT INTO chunk (chunk_id, documento_id, posicao, texto, localizacao, hash_documento)
                 VALUES (@id, @documento, @posicao, @texto, @localizacao, @hash)
-                """,
-                conn, tx);
+                """
+                : """
+                INSERT INTO chunk (chunk_id, documento_id, posicao, texto, localizacao, hash_documento, embedding)
+                VALUES (@id, @documento, @posicao, @texto, @localizacao, @hash, @embedding)
+                """;
+            await using var inserir = new NpgsqlCommand(sqlChunk, conn, tx);
             inserir.Parameters.AddWithValue("id", chunk.ChunkId);
             inserir.Parameters.AddWithValue("documento", documento.DocumentoId);
             inserir.Parameters.AddWithValue("posicao", chunk.Posicao);
             inserir.Parameters.AddWithValue("texto", chunk.Texto);
             inserir.Parameters.AddWithValue("localizacao", (object?)chunk.Localizacao ?? DBNull.Value);
             inserir.Parameters.AddWithValue("hash", chunk.HashDocumento);
+            if (_dimensao is not null)
+            {
+                inserir.Parameters.AddWithValue(
+                    "embedding",
+                    chunk.Embedding is null ? DBNull.Value : new Vector(chunk.Embedding));
+            }
+
             await inserir.ExecuteNonQueryAsync(ct);
         }
 
@@ -165,10 +251,30 @@ public sealed class PostgresRepositorioDocumento(string conexao) : IRepositorioD
         return valor is string json ? JsonSerializer.Deserialize<Documento>(json, JsonDaBase.Opcoes) : null;
     }
 
-    private async Task<NpgsqlConnection> AbrirAsync(CancellationToken ct)
+    private async Task GarantirColunaAsync(NpgsqlConnection conn, int dimensao, CancellationToken ct)
     {
-        var conn = new NpgsqlConnection(conexao);
-        await conn.OpenAsync(ct);
-        return conn;
+        const string ler = """
+            SELECT a.atttypmod
+            FROM pg_attribute a
+            JOIN pg_class c ON c.oid = a.attrelid
+            WHERE c.relname = 'chunk' AND a.attname = 'embedding' AND NOT a.attisdropped
+            """;
+        await using var leitura = new NpgsqlCommand(ler, conn);
+        var atual = await leitura.ExecuteScalarAsync(ct);
+        if (atual is int typmod)
+        {
+            if (typmod != dimensao)
+            {
+                throw new BuscaIndisponivelException("A dimensão configurada não confere com a coluna de embedding.");
+            }
+
+            return;
+        }
+
+        await using var criar = new NpgsqlCommand($"ALTER TABLE chunk ADD COLUMN IF NOT EXISTS embedding vector({dimensao})", conn);
+        await criar.ExecuteNonQueryAsync(ct);
     }
+
+    private async Task<NpgsqlConnection> AbrirAsync(CancellationToken ct) =>
+        await _fonte.OpenConnectionAsync(ct);
 }

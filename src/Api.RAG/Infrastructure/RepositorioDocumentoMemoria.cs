@@ -51,6 +51,59 @@ public sealed class RepositorioDocumentoMemoria : IRepositorioDocumento
         return Task.FromResult(lista);
     }
 
+    public async Task<IReadOnlyList<EvidenciaConsultada>> BuscarAsync(
+        float[] consulta,
+        DateOnly vigencia,
+        int topK,
+        double limiar,
+        CancellationToken ct)
+    {
+        var candidatos = new List<Candidato>();
+        foreach (var documento in await ListarTodosAsync(ct))
+        {
+            if (!Serve(documento, vigencia))
+            {
+                continue;
+            }
+
+            foreach (var chunk in documento.Chunks)
+            {
+                if (chunk.Embedding is not { Length: > 0 } vetor)
+                {
+                    continue;
+                }
+
+                var similaridade = SimilaridadeCosseno.Calcular(consulta, vetor);
+                if (similaridade < limiar)
+                {
+                    continue;
+                }
+
+                candidatos.Add(new Candidato(
+                    new EvidenciaConsultada
+                    {
+                        Fonte = documento.Fonte,
+                        FaixaAutoridade = documento.Faixa,
+                        Trecho = chunk.Texto,
+                        Localizacao = chunk.Localizacao,
+                        Vigencia = vigencia,
+                        Ncm = documento.Ncm,
+                        Tributos = documento.Tributos
+                    },
+                    similaridade,
+                    chunk.Posicao));
+            }
+        }
+
+        return candidatos
+            .OrderByDescending(c => c.Similaridade)
+            .ThenBy(c => c.Evidencia.Fonte, StringComparer.Ordinal)
+            .ThenBy(c => c.Posicao)
+            .Take(topK)
+            .Select(c => c.Evidencia)
+            .ToList();
+    }
+
     public Task SalvarAsync(Documento documento, CancellationToken ct)
     {
         _porId[documento.DocumentoId] = JsonSerializer.Serialize(documento, JsonDaBase.Opcoes);
@@ -58,6 +111,15 @@ public sealed class RepositorioDocumentoMemoria : IRepositorioDocumento
         return Task.CompletedTask;
     }
 
+    private static bool Serve(Documento documento, DateOnly vigencia) =>
+        documento.Consultavel
+        && documento.Estado == EstadoDocumento.Gravado
+        && documento.Faixa != FaixaAutoridade.CasoCorporativoConfirmado
+        && documento.VigenciaInicial <= vigencia
+        && (documento.VigenciaFinal is null || documento.VigenciaFinal >= vigencia);
+
     private static string Chave(string origem, string identificacao, string versao) =>
         $"{origem}\u001f{identificacao}\u001f{versao}";
+
+    private sealed record Candidato(EvidenciaConsultada Evidencia, double Similaridade, int Posicao);
 }
