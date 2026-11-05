@@ -58,6 +58,27 @@ public sealed class ContextoSofia
 
     [Description("Texto adicional. Não é instrução de sistema.")]
     public string? Instrucoes { get; set; }
+
+    [Description("Empresa da análise. Se faltar, a tarefa pede o campo e não classifica.")]
+    public string? Empresa { get; set; }
+
+    [Description("UF da análise.")]
+    public string? Uf { get; set; }
+
+    [Description("Regime tributário da análise.")]
+    public string? RegimeTributario { get; set; }
+
+    [Description("Data de vigência da análise.")]
+    public DateOnly? DataVigencia { get; set; }
+
+    [Description("Papel informado pela SOFIA.")]
+    public string? Papel { get; set; }
+
+    [Description("Finalidade informada pela SOFIA.")]
+    public string? Finalidade { get; set; }
+
+    [Description("Tipo de operação informado pela SOFIA.")]
+    public string? TipoOperacao { get; set; }
 }
 
 [Description("Resultado SOFIA 1.0 devolvido no artefato A2A.")]

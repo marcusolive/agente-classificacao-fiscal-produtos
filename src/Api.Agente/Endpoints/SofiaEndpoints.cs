@@ -97,7 +97,7 @@ public static class SofiaEndpoints
 
         try
         {
-            var (tarefaId, resultado) = atendente.Atender(pedido);
+            var (tarefaId, resultado) = await atendente.AtenderAsync(pedido, ct);
             return Rpc(id, null, Tarefa(tarefaId, resultado));
         }
         catch (SolicitacaoInvalidaException ex)
