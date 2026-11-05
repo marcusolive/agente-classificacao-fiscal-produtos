@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.6 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-05
+**Versão**: 1.0.7 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-05
 
 ## 1. Propósito e escopo
 
@@ -397,6 +397,14 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Impacto: a specification `003` passa a permitir a busca quando esses valores vierem da configuração. Nenhuma specification passa a gravar número de embedding no repositório.
 - Responsável: mantenedor do produto, na sessão de especificação.
 
+#### 1.0.7 — 2026-11-05
+
+- A DP-15 foi resolvida para este repositório na specification `specs/004-integracao-sofia-a2a/spec.md`. A Api.Agente publica Agent Card e recebe `message/send` no perfil A2A JSON-RPC 0.3, com o contrato de negócio SOFIA 1.0.
+- A Api.Agente não orquestra outros agentes. O cliente e o registro de agentes permanecem fora deste repositório.
+- A política CORS `SofiaBrowser` só existe quando `Cors:AllowedOrigins` tem origens. Lista vazia não habilita CORS.
+- Impacto: as specifications `001`, `002` e `003` permanecem. A análise REST não é substituída pelo A2A.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
 ## 9. Decisões pendentes
 
 Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementação **NÃO DEVE** transformá-la em comportamento fixo.
@@ -417,6 +425,6 @@ Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementa�
 | DP-12 | Provedor OpenAI, métrica cosseno e busca exata registrados no plano da specification `003` e no ADR `0006`. Dimensão, topK, limiar, tamanho de chunk e sobreposição seguem sem padrão de produção até exemplos representativos. | Plano técnico da Api.RAG | Não gravar esses números no repositório. Não criar índice HNSW nem IVFFlat. A coluna `vector(N)` só nasce quando a dimensão estiver configurada. |
 | DP-13 | Tempos e retentativa resolvidos no plano da specification 001. O nome do modelo permanece configuração obrigatória. | Plano técnico da Api.Agente | Não gravar nome de modelo no código de domínio. |
 | DP-14 | Tabela de preços, moeda e regra de estimativa de custo. | Plano técnico de consumo. | Não gravar custo estimado sem referência da tabela. |
-| DP-15 | Operações expostas pelo servidor A2A e seu contrato. | Especificação de integração, antes da exposição A2A. | Não expor operação A2A não especificada. |
+| DP-15 | Resolvida na specification `004`: Agent Card e `message/send` A2A JSON-RPC 0.3, com contrato SOFIA 1.0. A Api.Agente não orquestra outros agentes. | Especificação de integração | Não expor outro método A2A nem transformar a análise REST nesse protocolo. |
 | DP-16 | Projetos ou bibliotecas além de Api.Agente e Api.RAG. | Plano técnico, com justificativa de responsabilidade. | Não criar projeto adicional sem essa justificativa. |
 | DP-17 | Versões dos SDKs de ASP.NET Core, Semantic Kernel, cliente MCP, servidor A2A e PgVector. | Plano técnico. | Não tratar versão de SDK como princípio constitucional. |
