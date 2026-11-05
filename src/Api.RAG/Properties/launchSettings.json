@@ -1,15 +1,22 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:5120",
+      "sslPort": 0
+    }
+  },
   "profiles": {
     "Development": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
+      "commandName": "IISExpress",
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5120",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ConnectionStrings__Rag": "Host=localhost;Port=5434;Database=rag;Username=rag;Password=rag"
+        "ConnectionStrings__Rag": "Host=localhost;Port=5434;Database=rag;Username=rag;Password=rag",
+        "Ingestao__Chave": "ingestao-local"
       }
     },
     "Testing": {
