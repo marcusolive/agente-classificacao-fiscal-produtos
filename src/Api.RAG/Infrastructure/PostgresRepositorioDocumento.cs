@@ -56,6 +56,24 @@ public sealed class PostgresRepositorioDocumento(string conexao) : IRepositorioD
         return lista;
     }
 
+    public async Task<IReadOnlyList<Documento>> ListarTodosAsync(CancellationToken ct)
+    {
+        await using var conn = await AbrirAsync(ct);
+        await using var cmd = new NpgsqlCommand("SELECT conteudo::text FROM documento", conn);
+        var lista = new List<Documento>();
+        await using var leitor = await cmd.ExecuteReaderAsync(ct);
+        while (await leitor.ReadAsync(ct))
+        {
+            var documento = JsonSerializer.Deserialize<Documento>(leitor.GetString(0), JsonDaBase.Opcoes);
+            if (documento is not null)
+            {
+                lista.Add(documento);
+            }
+        }
+
+        return lista;
+    }
+
     public async Task SalvarAsync(Documento documento, CancellationToken ct)
     {
         await using var conn = await AbrirAsync(ct);

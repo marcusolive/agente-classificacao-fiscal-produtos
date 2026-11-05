@@ -20,10 +20,11 @@ public class SwaggerFundacaoTests : IClassFixture<integration.FabricaApi>
 
         Assert.Equal("1.0.0", info.GetProperty("version").GetString());
         Assert.Contains("consultar_conhecimento", info.GetProperty("description").GetString(), StringComparison.Ordinal);
-        if (corpo.TryGetProperty("paths", out var caminhos))
-        {
-            Assert.False(caminhos.TryGetProperty("/mcp", out _));
-        }
+        Assert.Contains("não é uma rota REST", info.GetProperty("description").GetString(), StringComparison.Ordinal);
+        var caminhos = corpo.GetProperty("paths");
+        Assert.True(caminhos.TryGetProperty("/v1/documentos", out _));
+        Assert.True(caminhos.TryGetProperty("/v1/documentos/{documentoId}", out _));
+        Assert.False(caminhos.TryGetProperty("/mcp", out _));
 
         var ui = await cliente.GetAsync("/swagger/index.html");
         ui.EnsureSuccessStatusCode();

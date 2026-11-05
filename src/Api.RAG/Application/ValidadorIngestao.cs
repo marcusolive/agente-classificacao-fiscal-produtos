@@ -26,6 +26,26 @@ public sealed class ValidadorIngestao(IOptions<OpcoesIngestao> opcoes)
             throw new RecusaIngestaoException("vigenciaInicial é obrigatória.");
         }
 
+        if (pedido.Faixa == FaixaAutoridade.CasoCorporativoConfirmado)
+        {
+            if (pedido.Decisao is null || !Enum.IsDefined(pedido.Decisao.Value))
+            {
+                throw new RecusaIngestaoException("decisao é obrigatória no caso confirmado.");
+            }
+
+            Exigir(pedido.PapelAutoridade, "papelAutoridade");
+            Exigir(pedido.Empresa, "empresa");
+            if (pedido.DataConfirmacao is null)
+            {
+                throw new RecusaIngestaoException("dataConfirmacao é obrigatória no caso confirmado.");
+            }
+
+            if (pedido.ExecucaoOrigem is null)
+            {
+                throw new RecusaIngestaoException("execucaoOrigem é obrigatória no caso confirmado.");
+            }
+        }
+
         if (pedido.Formato is null || !Enum.IsDefined(pedido.Formato.Value))
         {
             throw new RecusaIngestaoException("Formato de documento não aceito.");

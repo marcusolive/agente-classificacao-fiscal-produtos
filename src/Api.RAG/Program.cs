@@ -26,6 +26,12 @@ else
 }
 
 builder.Services.AddSingleton<ValidadorIngestao>();
+builder.Services.AddSingleton<ExtratorTexto>();
+builder.Services.AddSingleton<Segmentador>();
+builder.Services.AddSingleton<IProvedorEmbedding, ProvedorEmbeddingIndisponivel>();
+builder.Services.AddSingleton<IngestaoDocumento>();
+builder.Services.AddSingleton<ConsultaConhecimento>();
+builder.Services.AddMcpServer().WithHttpTransport().WithToolsFromAssembly();
 builder.Services.AddOpenApi(ContratoApi.Documento, options =>
 {
     options.AddDocumentTransformer((documento, _, _) =>
@@ -55,21 +61,38 @@ builder.Services.AddOpenApi(ContratoApi.Documento, options =>
                     ("ObterDocumentoV1", "200") => "Documento encontrado, com os chunks da versão.",
                     ("ObterDocumentoV1", "404") => "Documento não encontrado.",
                     ("ListarDocumentosV1", "200") => "Versões da mesma origem e identificação, sem misturar o texto delas.",
+                    ("ListarDocumentosV1", "400") => "origem e identificacao são obrigatórias.",
                     _ => corpo.Description
                 };
             }
         }
 
-        if (operacao.Parameters is null)
+        operacao.Parameters ??= [];
+        if (operacao.OperationId == "CriarDocumentoV1"
+            && !operacao.Parameters.OfType<OpenApiParameter>().Any(p => p.Name == "X-Chave-Ingestao"))
         {
-            return Task.CompletedTask;
+            operacao.Parameters.Add(new OpenApiParameter
+            {
+                Name = "X-Chave-Ingestao",
+                In = ParameterLocation.Header,
+                Required = true,
+                Description = "Chave de ingestão configurada no ambiente. Chave vazia recusa o pedido."
+            });
         }
 
-        foreach (var parametro in operacao.Parameters)
+        foreach (var parametro in operacao.Parameters.OfType<OpenApiParameter>())
         {
-            if (parametro is OpenApiParameter caminho && caminho.Name == "documentoId")
+            parametro.Description = parametro.Name switch
             {
-                caminho.Description = "Identificador devolvido na ingestão.";
+                "documentoId" => "Identificador devolvido na ingestão.",
+                "origem" => "Origem do documento.",
+                "identificacao" => "Identificação do documento dentro da origem.",
+                "X-Chave-Ingestao" => parametro.Description,
+                _ => parametro.Description
+            };
+            if (parametro.Name is "origem" or "identificacao")
+            {
+                parametro.Required = true;
             }
         }
 
@@ -92,6 +115,8 @@ app.MapSwaggerUI("/swagger", options =>
     options.SwaggerEndpoint($"/openapi/{ContratoApi.Documento}.json", $"{ContratoApi.Titulo} {ContratoApi.VersaoDocumento}");
     options.DocumentTitle = $"{ContratoApi.Titulo} {ContratoApi.VersaoDocumento}";
 });
+DocumentosEndpoints.Mapear(app);
+app.MapMcp("/mcp");
 app.Run();
 
 public partial class Program;

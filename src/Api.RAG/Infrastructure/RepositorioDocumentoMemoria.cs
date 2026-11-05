@@ -41,6 +41,16 @@ public sealed class RepositorioDocumentoMemoria : IRepositorioDocumento
         return Task.FromResult(lista);
     }
 
+    public Task<IReadOnlyList<Documento>> ListarTodosAsync(CancellationToken ct)
+    {
+        IReadOnlyList<Documento> lista = _porId.Values
+            .Select(json => JsonSerializer.Deserialize<Documento>(json, JsonDaBase.Opcoes))
+            .Where(d => d is not null)
+            .Cast<Documento>()
+            .ToList();
+        return Task.FromResult(lista);
+    }
+
     public Task SalvarAsync(Documento documento, CancellationToken ct)
     {
         _porId[documento.DocumentoId] = JsonSerializer.Serialize(documento, JsonDaBase.Opcoes);
