@@ -4,6 +4,24 @@ Entregável da skill `sofia-a2a-autenticacao`. Dados para o responsável central
 (professor) registrar o agente no catálogo `A2A:Agents` da SOFIA. **A chave autentica,
 mas não registra o agente automaticamente** — o cadastro central fica pendente.
 
+## Valores confirmados (verificados em produção em 2026-11-10)
+
+| Item | Valor |
+| --- | --- |
+| **IdAgente** (catálogo) | `agente-fiscal` |
+| **Nome exato** (`card.name` / `ExpectedName`) | `Agente Fiscal INFIS` |
+| **URL do Agent Card** | `https://agente-classificacao-fiscal.vercel.app/.well-known/agent-card.json` |
+| **URL do endpoint A2A** (`card.url`, `message/send`) | `https://agente-classificacao-fiscal.vercel.app/a2a` |
+| **Capacidade** | `analisar_documentos` ("Análise documental", tags `infis`, `fiscal`, `sofia`) |
+| **Perfil** | A2A `0.3.0`, `preferredTransport` JSONRPC, `version` 1.0.0 |
+| **Métodos A2A** | `message/send`, `tasks/get`, `tasks/cancel` |
+| **capabilities** | `streaming: false`, `pushNotifications: false` |
+| **Segurança** | esquema `bearer` (HTTP Bearer); card e `/a2a` retornam 401 sem a chave |
+
+> O `card.url` foi verificado respondendo `https://agente-classificacao-fiscal.vercel.app/a2a`
+> (descoberta autenticada). A SOFIA precisa enviar o Bearer na descoberta e na execução
+> (via `DiscoveryCredentialRef` e `CredentialRef`), senão não lê o card.
+
 ## Objeto de cadastro (A2A:Agents)
 
 ```json
