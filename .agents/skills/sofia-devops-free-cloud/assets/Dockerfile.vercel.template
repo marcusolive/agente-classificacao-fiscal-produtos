@@ -1,0 +1,15 @@
+# Template - copiar para Dockerfile.vercel na RAIZ do contexto de build.
+# Substitua <CAMINHO_CSPROJ> e <NOME_DLL> pelos valores reais encontrados na solucao.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet restore "<CAMINHO_CSPROJ>"
+RUN dotnet publish "<CAMINHO_CSPROJ>" -c Release -o /app/publish --no-restore /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV APP_DLL="<NOME_DLL>"
+# PORT e fornecida pela plataforma em runtime; usar valor local somente como fallback.
+CMD ["sh", "-c", "export ASPNETCORE_URLS=\"http://0.0.0.0:${PORT:-8080}\"; exec dotnet \"$APP_DLL\""]

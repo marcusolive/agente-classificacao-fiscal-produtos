@@ -1,0 +1,3 @@
+interface:
+  display_name: "Controle de Custos LLM"
+  short_description: "Controle de Custos LLM para projetos .NET com Spec Kit"

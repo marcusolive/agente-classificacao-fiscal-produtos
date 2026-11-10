@@ -1,0 +1,19 @@
+# Não enviar para o upload da Vercel (o build Docker só precisa de src/ e dos props).
+.vs/
+.vercel/
+.git/
+**/bin/
+**/obj/
+TestResults/
+.env
+.env.local
+
+# Artefatos locais que não entram na imagem
+data/
+tests/
+docs/
+specs/
+.agents/
+.claude/
+.specify/
+tools/

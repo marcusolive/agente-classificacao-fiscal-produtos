@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "agente": {
+      "root": "./",
+      "runtime": "container",
+      "entrypoint": "Dockerfile.vercel"
+    },
+    "rag": {
+      "root": "./",
+      "runtime": "container",
+      "entrypoint": "Dockerfile.rag.vercel"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "rag-fiscal-infis.vercel.app" }], "destination": { "service": "rag" } },
+    { "source": "/(.*)", "destination": { "service": "agente" } }
+  ]
+}

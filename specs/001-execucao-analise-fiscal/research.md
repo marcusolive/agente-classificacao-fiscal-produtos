@@ -2,7 +2,7 @@
 
 ## Decisão 1 — Resposta na mesma solicitação
 
-**Decisão**: `POST /analises` devolve o resultado completo. `GET /analises/{execucaoId}` devolve a execução persistida.
+**Decisão**: `POST /v1/analises` devolve o resultado completo. `GET /v1/analises/{execucaoId}` devolve a execução persistida. O contrato `1.0.0` é o documento OpenAPI `v1`.
 
 **Racional**: Os critérios de aceite observam o resultado da análise. Os dois acessos cumprem a specification sem uma fila.
 

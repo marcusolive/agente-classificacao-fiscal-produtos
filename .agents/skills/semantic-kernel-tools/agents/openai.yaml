@@ -1,0 +1,3 @@
+interface:
+  display_name: "Ferramentas Semantic Kernel"
+  short_description: "Ferramentas Semantic Kernel para projetos .NET com Spec Kit"

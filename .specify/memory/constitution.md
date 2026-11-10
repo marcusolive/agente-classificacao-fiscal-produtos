@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.3 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-10-29
+**Versão**: 1.0.7 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-05
 
 ## 1. Propósito e escopo
 
@@ -375,6 +375,36 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Impacto: o plano e o contrato da execução da análise passam a ser a fonte desses itens. As demais specifications ainda não existem.
 - Responsável: mantenedor do produto, na sessão de especificação.
 
+#### 1.0.4 — 2026-10-29
+
+- A DP-04 foi resolvida apenas quanto à autoridade e ao limite da correção, na specification `specs/002-confirmacao-caso-corporativo/spec.md`. A autoridade é o papel informado na confirmação, sem catálogo fixo de cargos. A correção só pode usar código presente nas evidências da execução. O caso vale somente para a empresa dessa execução.
+- A gravação do precedente continua proibida até a specification da Api.RAG.
+- Impacto: a specification 001 não passa a gravar caso. A specification 002 publica o contrato de confirmação sem persistir precedente.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
+#### 1.0.5 — 2026-10-29
+
+- A DP-11 foi resolvida quanto ao comportamento da ingestão, na specification `specs/003-base-conhecimento-rag/spec.md`. Versões convivem e a consulta por data não as mistura. O mesmo hash é ignorado. Conteúdo diferente na mesma versão é recusado.
+- A DP-04 passa a permitir gravar o caso confirmado na Api.RAG. A ferramenta MCP atual não devolve esse caso, porque não recebe a empresa.
+- Os números de chunk, embedding e busca continuam na DP-12, para o plano técnico.
+- Impacto: a specification 003 é a fonte desses critérios. A specification 002 não passa a gravar o caso. A Api.Agente não acessa o banco da Api.RAG.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
+#### 1.0.6 — 2026-11-05
+
+- A DP-12 foi resolvida em parte no plano da specification `003` e no ADR `0006`. O provedor é OpenAI, a métrica é cosseno e a busca é exata, sem índice HNSW ou IVFFlat.
+- Dimensão, topK, limiar, tamanho de chunk e sobreposição continuam sem padrão de produção até avaliação com exemplos representativos. A coluna `vector(N)` só nasce quando a dimensão estiver configurada.
+- Impacto: a specification `003` passa a permitir a busca quando esses valores vierem da configuração. Nenhuma specification passa a gravar número de embedding no repositório.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
+#### 1.0.7 — 2026-11-05
+
+- A DP-15 foi resolvida para este repositório na specification `specs/004-integracao-sofia-a2a/spec.md`. A Api.Agente publica Agent Card e recebe `message/send` no perfil A2A JSON-RPC 0.3, com o contrato de negócio SOFIA 1.0.
+- A Api.Agente não orquestra outros agentes. O cliente e o registro de agentes permanecem fora deste repositório.
+- A política CORS `SofiaBrowser` só existe quando `Cors:AllowedOrigins` tem origens. Lista vazia não habilita CORS.
+- Impacto: as specifications `001`, `002` e `003` permanecem. A análise REST não é substituída pelo A2A.
+- Responsável: mantenedor do produto, na sessão de especificação.
+
 ## 9. Decisões pendentes
 
 Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementação **NÃO DEVE** transformá-la em comportamento fixo.
@@ -384,17 +414,17 @@ Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementa�
 | DP-01 | Armazenamento de memória conversacional: MongoDB ou Redis. | Plano técnico, por ADR, antes da implementação de memória. | Não implementar memória. |
 | DP-02 | Política de retenção, expiração, exclusão e proteção de dados sensíveis da memória, da trilha e do consumo. | Plano técnico, por ADR, antes da persistência correspondente. | Não persistir conteúdo sensível com política implícita. |
 | DP-03 | Aplicação do isolamento por organização e papéis de acesso. | Esclarecimentos e especificação de segurança. | Não assumir cenário multiorganização nem papel não especificado. |
-| DP-04 | Autoridade habilitada a confirmar ou corrigir sugestão e bloqueio para a etapa 25. | Esclarecimentos e especificação do caso corporativo. | Não gravar precedente corporativo. |
+| DP-04 | Autoridade e correção resolvidas na specification `002`. A gravação do caso confirmado está na specification `003`. A consulta MCP atual não devolve esse caso, porque não recebe a empresa. | Contrato MCP com empresa, antes de o agente recuperar o caso | Não devolver caso corporativo em `consultar_conhecimento` enquanto a chamada não informar a empresa. |
 | DP-05 | Resolvida em `specs/001-execucao-analise-fiscal/spec.md`. Ordem: legislação vigente, notas e Regras Gerais de Interpretação, caso corporativo confirmado, texto do fornecedor. | Especificação da análise | Seguir essa ordem. Empate na mesma faixa pede revisão humana. |
 | DP-06 | Limiar resolvido na specification `001`: confiança baixa é menor que 70 em escala de 0 a 100. Impacto relevante segue em aberto. | Esclarecimento da análise, com exemplos reais de impacto | Não inventar o que é impacto relevante. Calcular confiança na escala decidida. |
 | DP-07 | Tipos resolvidos na specification `001`: descrição textual, XML de NF-e dos itens, planilha, PDF, laudo e ficha técnica. Tamanho máximo e limites numéricos seguem em aberto. | Esclarecimento do contrato de entrada | Não aceitar tipo fora dessa lista e não inventar limite numérico. |
 | DP-08 | Layouts, versões, schemas XSD e validadores por tipo de documento, obtidos de fonte oficial. | Especificação documental, antes do validador correspondente. | Não inventar schema nem aplicar XSD sem schema registrado. |
 | DP-09 | Regras fiscais, tabelas vigentes, alíquotas e critérios de enquadramento de NCM, IPI, ICMS, CEST, PIS/COFINS e IBS/CBS. | Especificação de conhecimento e de tratamento, com fonte e vigência. | Não codificar regra fiscal sem essa especificação. |
 | DP-10 | Resolvida no contrato `analise-v1.openapi.yaml` da specification 001. | Especificação da execução do agente | Publicar a resposta no contrato versão 1.0.0. |
-| DP-11 | Critérios de segmentação, deduplicação, reprocessamento e atualização da ingestão. | Especificação da Api.RAG. | Não ingerir base normativa com regra implícita de chunk. |
-| DP-12 | Modelo de embeddings, dimensão, estratégia de busca, topK e limiar, avaliados com exemplos representativos. | Plano técnico da Api.RAG. | Não fixar esses parâmetros como padrão de produção. |
+| DP-11 | Comportamento resolvido na specification `003`: versões convivem, o mesmo hash é ignorado e conteúdo diferente na mesma versão é recusado. O tamanho numérico do chunk permanece na DP-12. | Plano técnico da Api.RAG | Não inventar tamanho de chunk nem misturar versões na mesma vigência. |
+| DP-12 | Provedor OpenAI, métrica cosseno e busca exata registrados no plano da specification `003` e no ADR `0006`. Dimensão, topK, limiar, tamanho de chunk e sobreposição seguem sem padrão de produção até exemplos representativos. | Plano técnico da Api.RAG | Não gravar esses números no repositório. Não criar índice HNSW nem IVFFlat. A coluna `vector(N)` só nasce quando a dimensão estiver configurada. |
 | DP-13 | Tempos e retentativa resolvidos no plano da specification 001. O nome do modelo permanece configuração obrigatória. | Plano técnico da Api.Agente | Não gravar nome de modelo no código de domínio. |
 | DP-14 | Tabela de preços, moeda e regra de estimativa de custo. | Plano técnico de consumo. | Não gravar custo estimado sem referência da tabela. |
-| DP-15 | Operações expostas pelo servidor A2A e seu contrato. | Especificação de integração, antes da exposição A2A. | Não expor operação A2A não especificada. |
+| DP-15 | Resolvida na specification `004`: Agent Card e `message/send` A2A JSON-RPC 0.3, com contrato SOFIA 1.0. A Api.Agente não orquestra outros agentes. | Especificação de integração | Não expor outro método A2A nem transformar a análise REST nesse protocolo. |
 | DP-16 | Projetos ou bibliotecas além de Api.Agente e Api.RAG. | Plano técnico, com justificativa de responsabilidade. | Não criar projeto adicional sem essa justificativa. |
 | DP-17 | Versões dos SDKs de ASP.NET Core, Semantic Kernel, cliente MCP, servidor A2A e PgVector. | Plano técnico. | Não tratar versão de SDK como princípio constitucional. |
