@@ -12,10 +12,18 @@ public sealed class FabricaApi : WebApplicationFactory<Program>
 
     public string? OrigemCors { get; init; }
 
+    public string? SofiaToken { get; init; }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.UseSetting("Sofia:Chave", "chave-sofia-teste");
+        // Quando SofiaToken está definido, Sofia:Chave fica vazia para provar que
+        // SOFIA_A2A_TOKEN é a fonte efetiva do segredo de entrada A2A.
+        builder.UseSetting("Sofia:Chave", string.IsNullOrWhiteSpace(SofiaToken) ? "chave-sofia-teste" : "");
+        if (!string.IsNullOrWhiteSpace(SofiaToken))
+        {
+            builder.UseSetting("SOFIA_A2A_TOKEN", SofiaToken);
+        }
         if (!string.IsNullOrWhiteSpace(OrigemCors))
         {
             builder.UseSetting("Cors:AllowedOrigins:0", OrigemCors);

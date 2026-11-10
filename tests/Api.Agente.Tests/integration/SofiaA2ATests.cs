@@ -99,23 +99,27 @@ public class SofiaA2ATests : IClassFixture<FabricaApi>
         Assert.Equal(-32602, semTexto.GetProperty("error").GetProperty("code").GetInt32());
         Assert.DoesNotContain("texto extraído", semTexto.ToString(), StringComparison.OrdinalIgnoreCase);
 
-        var metodo = await cliente.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-9", method = "tasks/get" });
+        var metodo = await cliente.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-9", method = "metodo/inexistente" });
         var corpo = await metodo.Content.ReadFromJsonAsync<JsonElement>();
         Assert.Equal(-32601, corpo.GetProperty("error").GetProperty("code").GetInt32());
     }
 
     [Fact]
-    public async Task Sem_bearer_o_endpoint_recusa_e_o_card_permanece_publico()
+    public async Task Sem_bearer_o_card_e_o_rpc_sao_recusados_e_com_bearer_o_card_abre()
     {
-        var cliente = _fabrica.CreateClient();
-        var recusa = await cliente.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-1", method = "message/send" });
+        var semChave = _fabrica.CreateClient();
+        var cardRecusado = await semChave.GetAsync("/.well-known/agent-card.json");
+        Assert.Equal(HttpStatusCode.Unauthorized, cardRecusado.StatusCode);
+        Assert.Equal("Bearer", cardRecusado.Headers.WwwAuthenticate.Single().Scheme);
+
+        var recusa = await semChave.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-1", method = "message/send" });
         Assert.Equal(HttpStatusCode.Unauthorized, recusa.StatusCode);
 
-        cliente.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "outra");
-        var outra = await cliente.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-1", method = "message/send" });
+        semChave.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "outra");
+        var outra = await semChave.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-1", method = "message/send" });
         Assert.Equal(HttpStatusCode.Unauthorized, outra.StatusCode);
 
-        var card = await _fabrica.CreateClient().GetFromJsonAsync<JsonElement>("/.well-known/agent-card.json");
+        var card = await Autenticado(_fabrica).GetFromJsonAsync<JsonElement>("/.well-known/agent-card.json");
         Assert.Equal("analisar_documentos", card.GetProperty("skills")[0].GetProperty("id").GetString());
         Assert.Equal("0.3.0", card.GetProperty("protocolVersion").GetString());
         Assert.Equal("JSONRPC", card.GetProperty("preferredTransport").GetString());
@@ -140,6 +144,48 @@ public class SofiaA2ATests : IClassFixture<FabricaApi>
         var resposta = await direto.PostAsync("/a2a", Json(Envelope("nota sem origem")));
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         Assert.False(resposta.Headers.Contains("Access-Control-Allow-Origin"));
+    }
+
+    [Fact]
+    public async Task Tasks_get_recupera_a_tarefa_e_tasks_cancel_recusa_tarefa_concluida()
+    {
+        var cliente = Autenticado(_fabrica);
+        var enviado = await EnviarAsync(cliente, PedidoFiscal(
+            "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            "parafuso sem atributos"));
+        var tarefaId = enviado.GetProperty("result").GetProperty("id").GetString()!;
+
+        var obtido = await cliente.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-get", method = "tasks/get", @params = new { id = tarefaId } });
+        var corpoObtido = await obtido.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(tarefaId, corpoObtido.GetProperty("result").GetProperty("id").GetString());
+        Assert.Equal("task", corpoObtido.GetProperty("result").GetProperty("kind").GetString());
+        Assert.Equal("analise-sofia-v1", corpoObtido.GetProperty("result").GetProperty("artifacts")[0].GetProperty("name").GetString());
+
+        var ausente = await cliente.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-404", method = "tasks/get", @params = new { id = "tarefa-inexistente" } });
+        var corpoAusente = await ausente.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(-32001, corpoAusente.GetProperty("error").GetProperty("code").GetInt32());
+
+        var cancelado = await cliente.PostAsJsonAsync("/a2a", new { jsonrpc = "2.0", id = "rpc-cancel", method = "tasks/cancel", @params = new { id = tarefaId } });
+        var corpoCancel = await cancelado.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(-32002, corpoCancel.GetProperty("error").GetProperty("code").GetInt32());
+    }
+
+    [Fact]
+    public async Task Token_de_ambiente_prevalece_como_fonte_do_segredo_a2a()
+    {
+        using var fabrica = new FabricaApi { SofiaToken = "token-ambiente-xyz" };
+
+        var comToken = fabrica.CreateClient();
+        comToken.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "token-ambiente-xyz");
+        var aceito = await comToken.PostAsync("/a2a", Json(Envelope("nota")));
+        Assert.Equal(HttpStatusCode.OK, aceito.StatusCode);
+
+        var comChaveAntiga = fabrica.CreateClient();
+        comChaveAntiga.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "chave-sofia-teste");
+        var recusado = await comChaveAntiga.PostAsync("/a2a", Json(Envelope("nota")));
+        Assert.Equal(HttpStatusCode.Unauthorized, recusado.StatusCode);
+        Assert.Equal("Bearer", recusado.Headers.WwwAuthenticate.Single().Scheme);
     }
 
     private static HttpClient Autenticado(FabricaApi fabrica)

@@ -11,7 +11,7 @@ paths:
       tags:
         - SOFIA A2A
       summary: Publica o Agent Card.
-      description: Descoberta A2A v0.3. A propriedade url é o endpoint JSON-RPC. Esta rota não substitui POST /v1/analises.
+      description: Descoberta A2A v0.3. A propriedade url é o endpoint JSON-RPC. Esta rota não substitui POST /v1/analises. Exige Bearer; descoberta sem a chave recebe 401.
       operationId: ObterAgentCardV1
       responses:
         '200':
@@ -20,12 +20,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CartaoAgente'
+        '401':
+          description: Bearer ausente ou diferente da chave configurada.
   /a2a:
     post:
       tags:
         - SOFIA A2A
-      summary: Recebe message/send.
-      description: JSON-RPC 2.0. O texto da mensagem é SolicitacaoAnaliseSofia 1.0. A tarefa concluída devolve ResultadoAnaliseSofia em um TextPart. Exige Bearer. Erro de protocolo responde HTTP 200 com error.
+      summary: 'Recebe message/send, tasks/get e tasks/cancel.'
+      description: JSON-RPC 2.0. message/send recebe SolicitacaoAnaliseSofia 1.0 e devolve ResultadoAnaliseSofia em um TextPart. tasks/get recupera a tarefa por id; tasks/cancel não cancela tarefa já concluída. Exige Bearer. Erro de protocolo responde HTTP 200 com error.
       operationId: EnviarMensagemA2AV1
       responses:
         '200':

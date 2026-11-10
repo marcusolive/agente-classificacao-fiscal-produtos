@@ -1,0 +1,4 @@
+interface:
+  display_name: "SOFIA A2A — Autenticação dos agentes"
+  short_description: "Integre agentes à SOFIA com Bearer e Agent Cards"
+  default_prompt: "Use $sofia-a2a-autenticacao para integrar meu agente à SOFIA, configurar a chave do treinamento, proteger o Agent Card e validar descoberta e execução."

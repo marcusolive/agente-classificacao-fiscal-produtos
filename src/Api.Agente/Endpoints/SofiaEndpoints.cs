@@ -1,7 +1,10 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Api.Agente.Application;
 using Api.Agente.Domain;
+using Api.Agente.Infrastructure;
 using Microsoft.Extensions.Options;
 
 namespace Api.Agente.Endpoints;
@@ -18,15 +21,16 @@ public static class SofiaEndpoints
             .WithTags("SOFIA A2A")
             .WithName("ObterAgentCardV1")
             .WithSummary("Publica o Agent Card.")
-            .WithDescription("Descoberta A2A v0.3. A propriedade url é o endpoint JSON-RPC. Esta rota não substitui POST /v1/analises.")
-            .Produces<CartaoAgente>(StatusCodes.Status200OK);
+            .WithDescription("Descoberta A2A v0.3. A propriedade url é o endpoint JSON-RPC. Esta rota não substitui POST /v1/analises. Exige Bearer; descoberta sem a chave recebe 401.")
+            .Produces<CartaoAgente>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         var envio = app.MapPost("/a2a", EnviarAsync)
             .WithGroupName(ContratoApi.Documento)
             .WithTags("SOFIA A2A")
             .WithName("EnviarMensagemA2AV1")
-            .WithSummary("Recebe message/send.")
-            .WithDescription("JSON-RPC 2.0. O texto da mensagem é SolicitacaoAnaliseSofia 1.0. A tarefa concluída devolve ResultadoAnaliseSofia em um TextPart. Exige Bearer. Erro de protocolo responde HTTP 200 com error.")
+            .WithSummary("Recebe message/send, tasks/get e tasks/cancel.")
+            .WithDescription("JSON-RPC 2.0. message/send recebe SolicitacaoAnaliseSofia 1.0 e devolve ResultadoAnaliseSofia em um TextPart. tasks/get recupera a tarefa por id; tasks/cancel não cancela tarefa já concluída. Exige Bearer. Erro de protocolo responde HTTP 200 com error.")
             .Produces<RespostaRpc>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
@@ -41,6 +45,11 @@ public static class SofiaEndpoints
 
     private static IResult Cartao(HttpRequest requisicao, IOptions<OpcoesSofia> opcoes)
     {
+        if (!Autorizado(requisicao, opcoes.Value))
+        {
+            return NaoAutorizado(requisicao.HttpContext.Response);
+        }
+
         var sofia = opcoes.Value;
         var url = string.IsNullOrWhiteSpace(sofia.Url)
             ? $"{requisicao.Scheme}://{requisicao.Host}/a2a"
@@ -56,12 +65,13 @@ public static class SofiaEndpoints
     private static async Task<IResult> EnviarAsync(
         HttpRequest requisicao,
         AtendenteSofia atendente,
+        MemoriaSolicitacaoSofia memoria,
         IOptions<OpcoesSofia> opcoes,
         CancellationToken ct)
     {
         if (!Autorizado(requisicao, opcoes.Value))
         {
-            return Results.Unauthorized();
+            return NaoAutorizado(requisicao.HttpContext.Response);
         }
 
         JsonElement corpo;
@@ -74,7 +84,23 @@ public static class SofiaEndpoints
             return Rpc(null, ErroRpc.Parse);
         }
 
-        if (!CorpoValido(corpo, out var id, out var erro))
+        if (!RequisicaoBasica(corpo, out var id, out var metodo, out var erro))
+        {
+            return Rpc(id, erro!);
+        }
+
+        return metodo switch
+        {
+            "message/send" => await MensagemAsync(corpo, id, atendente, ct),
+            "tasks/get" => ConsultarTarefa(corpo, id, memoria),
+            "tasks/cancel" => CancelarTarefa(corpo, id, memoria),
+            _ => Rpc(id, ErroRpc.Metodo)
+        };
+    }
+
+    private static async Task<IResult> MensagemAsync(JsonElement corpo, JsonElement? id, AtendenteSofia atendente, CancellationToken ct)
+    {
+        if (!MensagemValida(corpo, out var erro))
         {
             return Rpc(id, erro!);
         }
@@ -106,8 +132,34 @@ public static class SofiaEndpoints
         }
     }
 
+    private static IResult ConsultarTarefa(JsonElement corpo, JsonElement? id, MemoriaSolicitacaoSofia memoria)
+    {
+        if (!IdTarefa(corpo, out var tarefaId))
+        {
+            return Rpc(id, ErroRpc.Parametros("tasks/get exige params.id da tarefa."));
+        }
+
+        return memoria.TentarPorTarefa(tarefaId, out var resultado)
+            ? Rpc(id, null, Tarefa(tarefaId, resultado))
+            : Rpc(id, ErroRpc.TarefaNaoEncontrada);
+    }
+
+    private static IResult CancelarTarefa(JsonElement corpo, JsonElement? id, MemoriaSolicitacaoSofia memoria)
+    {
+        if (!IdTarefa(corpo, out var tarefaId))
+        {
+            return Rpc(id, ErroRpc.Parametros("tasks/cancel exige params.id da tarefa."));
+        }
+
+        // Processamento síncrono: uma tarefa existente já está completed e não é cancelável.
+        return memoria.TentarPorTarefa(tarefaId, out _)
+            ? Rpc(id, ErroRpc.TarefaNaoCancelavel)
+            : Rpc(id, ErroRpc.TarefaNaoEncontrada);
+    }
+
     private static bool Autorizado(HttpRequest requisicao, OpcoesSofia sofia)
     {
+        // Fail-closed: sem chave configurada, a integração A2A fica indisponível.
         if (string.IsNullOrEmpty(sofia.Chave))
         {
             return false;
@@ -115,13 +167,27 @@ public static class SofiaEndpoints
 
         var cabecalho = requisicao.Headers.Authorization.ToString();
         const string prefixo = "Bearer ";
-        return cabecalho.StartsWith(prefixo, StringComparison.Ordinal)
-            && cabecalho[prefixo.Length..] == sofia.Chave;
+        if (!cabecalho.StartsWith(prefixo, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        // Comparação em tempo constante do segredo opaco, sem normalizar maiúsculas/minúsculas.
+        var informado = Encoding.UTF8.GetBytes(cabecalho[prefixo.Length..]);
+        var esperado = Encoding.UTF8.GetBytes(sofia.Chave);
+        return CryptographicOperations.FixedTimeEquals(informado, esperado);
     }
 
-    private static bool CorpoValido(JsonElement corpo, out JsonElement? id, out ErroRpc? erro)
+    private static IResult NaoAutorizado(HttpResponse resposta)
     {
-        id = corpo.TryGetProperty("id", out var encontrado) ? encontrado.Clone() : null;
+        resposta.Headers.WWWAuthenticate = "Bearer";
+        return Results.StatusCode(StatusCodes.Status401Unauthorized);
+    }
+
+    private static bool RequisicaoBasica(JsonElement corpo, out JsonElement? id, out string metodo, out ErroRpc? erro)
+    {
+        id = corpo.ValueKind == JsonValueKind.Object && corpo.TryGetProperty("id", out var encontrado) ? encontrado.Clone() : null;
+        metodo = "";
         erro = null;
         if (corpo.ValueKind != JsonValueKind.Object
             || !corpo.TryGetProperty("jsonrpc", out var versao)
@@ -132,12 +198,19 @@ public static class SofiaEndpoints
             return false;
         }
 
-        if (!corpo.TryGetProperty("method", out var metodo) || metodo.GetString() != "message/send")
+        if (!corpo.TryGetProperty("method", out var valor) || string.IsNullOrWhiteSpace(valor.GetString()))
         {
             erro = ErroRpc.Metodo;
             return false;
         }
 
+        metodo = valor.GetString()!;
+        return true;
+    }
+
+    private static bool MensagemValida(JsonElement corpo, out ErroRpc? erro)
+    {
+        erro = null;
         if (!corpo.TryGetProperty("params", out var parametros)
             || !parametros.TryGetProperty("message", out var mensagem)
             || !mensagem.TryGetProperty("role", out var papel)
@@ -150,6 +223,21 @@ public static class SofiaEndpoints
         }
 
         return true;
+    }
+
+    private static bool IdTarefa(JsonElement corpo, out string tarefaId)
+    {
+        tarefaId = "";
+        if (corpo.TryGetProperty("params", out var parametros)
+            && parametros.TryGetProperty("id", out var valor)
+            && valor.ValueKind == JsonValueKind.String
+            && !string.IsNullOrWhiteSpace(valor.GetString()))
+        {
+            tarefaId = valor.GetString()!;
+            return true;
+        }
+
+        return false;
     }
 
     private static bool ParteTexto(JsonElement mensagem, out string texto, out ErroRpc? erro)
@@ -275,5 +363,7 @@ public sealed record ErroRpc(int Code, string Message)
     public static readonly ErroRpc Parse = new(-32700, "JSON inválido.");
     public static readonly ErroRpc Requisicao = new(-32600, "Requisição JSON-RPC inválida.");
     public static readonly ErroRpc Metodo = new(-32601, "Método não encontrado.");
+    public static readonly ErroRpc TarefaNaoEncontrada = new(-32001, "Tarefa não encontrada.");
+    public static readonly ErroRpc TarefaNaoCancelavel = new(-32002, "Tarefa concluída não pode ser cancelada.");
     public static ErroRpc Parametros(string mensagem) => new(-32602, mensagem);
 }
