@@ -1,0 +1,3 @@
+interface:
+  display_name: "SOFIA DevOps Cloud Gratis"
+  short_description: "Deploy .NET na Vercel, Mongo Atlas e Neon pgvector"
