@@ -120,6 +120,7 @@ app.MapSwaggerUI("/swagger", options =>
 });
 DocumentosEndpoints.Mapear(app);
 app.MapMcp("/mcp");
+NavegadorLocal.AgendarSwagger(app);
 app.Run();
 
 public partial class Program;
