@@ -13,8 +13,7 @@
     }
   },
   "rewrites": [
-    { "source": "/v1/documentos(.*)", "destination": { "service": "rag" } },
-    { "source": "/mcp(.*)", "destination": { "service": "rag" } },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "rag-fiscal-infis.vercel.app" }], "destination": { "service": "rag" } },
     { "source": "/(.*)", "destination": { "service": "agente" } }
   ]
 }
