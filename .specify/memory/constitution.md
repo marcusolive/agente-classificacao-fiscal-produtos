@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.7 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-05
+**Versão**: 1.0.8 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-10
 
 ## 1. Propósito e escopo
 
@@ -405,6 +405,14 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Impacto: as specifications `001`, `002` e `003` permanecem. A análise REST não é substituída pelo A2A.
 - Responsável: mantenedor do produto, na sessão de especificação.
 
+#### 1.0.8 — 2026-11-10
+
+- A DP-15 foi ampliada para alinhar o perfil A2A à skill `sofia-a2a-autenticacao` do treinamento INFIS/COTI. O Agent Card passa a exigir Bearer na descoberta, e a Api.Agente passa a aceitar os métodos `tasks/get` e `tasks/cancel`, além de `message/send`.
+- O segredo de entrada A2A é lido de `SOFIA_A2A_TOKEN` (prevalece sobre `Sofia:Chave`), comparado em tempo constante, com `WWW-Authenticate: Bearer` no 401 e fail-closed quando ausente. O segredo não entra no código nem em arquivo versionado.
+- Processamento síncrono: `tasks/get` recupera a tarefa concluída por id; `tasks/cancel` responde erro A2A de tarefa não cancelável. A Api.Agente continua sem orquestrar outros agentes.
+- Impacto: a specification `004` e seu contrato OpenAPI são atualizados. As specifications `001`, `002` e `003` permanecem. A análise REST não é substituída pelo A2A.
+- Responsável: mantenedor do produto, a pedido do aluno, para rodar a skill do treinamento.
+
 ## 9. Decisões pendentes
 
 Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementação **NÃO DEVE** transformá-la em comportamento fixo.
@@ -425,6 +433,6 @@ Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementa�
 | DP-12 | Provedor OpenAI, métrica cosseno e busca exata registrados no plano da specification `003` e no ADR `0006`. Dimensão, topK, limiar, tamanho de chunk e sobreposição seguem sem padrão de produção até exemplos representativos. | Plano técnico da Api.RAG | Não gravar esses números no repositório. Não criar índice HNSW nem IVFFlat. A coluna `vector(N)` só nasce quando a dimensão estiver configurada. |
 | DP-13 | Tempos e retentativa resolvidos no plano da specification 001. O nome do modelo permanece configuração obrigatória. | Plano técnico da Api.Agente | Não gravar nome de modelo no código de domínio. |
 | DP-14 | Tabela de preços, moeda e regra de estimativa de custo. | Plano técnico de consumo. | Não gravar custo estimado sem referência da tabela. |
-| DP-15 | Resolvida na specification `004`: Agent Card e `message/send` A2A JSON-RPC 0.3, com contrato SOFIA 1.0. A Api.Agente não orquestra outros agentes. | Especificação de integração | Não expor outro método A2A nem transformar a análise REST nesse protocolo. |
+| DP-15 | Resolvida na specification `004` e ampliada em 1.0.8: Agent Card **protegido por Bearer** e os métodos `message/send`, `tasks/get` e `tasks/cancel` no perfil A2A JSON-RPC 0.3, com contrato SOFIA 1.0. A Api.Agente não orquestra outros agentes. | Especificação de integração | Expor apenas esses três métodos A2A e a descoberta autenticada; não transformar a análise REST nesse protocolo. |
 | DP-16 | Projetos ou bibliotecas além de Api.Agente e Api.RAG. | Plano técnico, com justificativa de responsabilidade. | Não criar projeto adicional sem essa justificativa. |
 | DP-17 | Versões dos SDKs de ASP.NET Core, Semantic Kernel, cliente MCP, servidor A2A e PgVector. | Plano técnico. | Não tratar versão de SDK como princípio constitucional. |

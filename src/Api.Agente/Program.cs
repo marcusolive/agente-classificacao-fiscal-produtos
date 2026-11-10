@@ -11,6 +11,16 @@ builder.Services.Configure<OpcoesAnalise>(builder.Configuration.GetSection("Anal
 builder.Services.Configure<OpcoesOpenAi>(builder.Configuration.GetSection("OpenAI"));
 builder.Services.Configure<OpcoesConhecimento>(builder.Configuration.GetSection("Conhecimento"));
 builder.Services.Configure<OpcoesSofia>(builder.Configuration.GetSection("Sofia"));
+// A skill sofia-a2a-autenticacao padroniza SOFIA_A2A_TOKEN como fonte do segredo de entrada A2A.
+// Quando presente no ambiente, ele prevalece sobre Sofia:Chave, sem fixar o segredo no código.
+builder.Services.PostConfigure<OpcoesSofia>(sofia =>
+{
+    var token = builder.Configuration["SOFIA_A2A_TOKEN"];
+    if (!string.IsNullOrWhiteSpace(token))
+    {
+        sofia.Chave = token.Trim();
+    }
+});
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
     o.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
@@ -90,6 +100,7 @@ builder.Services.AddOpenApi(ContratoApi.Documento, options =>
                     ("ConfirmarCasoV1", "400") => "Papel ausente, item inexistente ou código que não está nas evidências da execução.",
                     ("ConfirmarCasoV1", "404") => "Execução não encontrada.",
                     ("ObterAgentCardV1", "200") => "Agent Card A2A. A propriedade url é o endpoint message/send.",
+                    ("ObterAgentCardV1", "401") => "Bearer ausente ou diferente da chave configurada.",
                     ("EnviarMensagemA2AV1", "200") => "JSON-RPC message/send. O artefato contém ResultadoAnaliseSofia. Erro de protocolo usa o campo error.",
                     ("EnviarMensagemA2AV1", "401") => "Bearer ausente ou diferente da chave configurada.",
                     _ => corpo.Description
