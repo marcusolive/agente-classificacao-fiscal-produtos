@@ -129,10 +129,13 @@ public class SofiaA2ATests : IClassFixture<FabricaApi>
             nfe));
         var resultado = Resultado(resposta);
 
-        // Dois itens lidos; o açúcar com NCM declarada errada vira achado.
+        // Dois itens lidos; o açúcar com NCM declarada errada vira achado explícito.
         Assert.Equal("concluido", resultado.GetProperty("status").GetString());
         Assert.True(resultado.GetProperty("achados").GetArrayLength() >= 1);
-        Assert.Contains("17011400", resultado.ToString(), StringComparison.Ordinal);
+        var achado = resultado.GetProperty("achados")[0].GetProperty("descricao").GetString()!;
+        Assert.Contains("84713012", achado, StringComparison.Ordinal);
+        Assert.Contains("não se sustenta", achado, StringComparison.Ordinal);
+        Assert.Contains("17011400", achado, StringComparison.Ordinal);
     }
 
     [Fact]

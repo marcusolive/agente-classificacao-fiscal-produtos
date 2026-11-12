@@ -59,11 +59,14 @@ public static class MontadorResultadoSofia
                     continue;
                 }
 
-                var descricao = item.Achados.FirstOrDefault()?.Descricao ?? $"Item {item.ItemId} divergente.";
-                if (!string.IsNullOrWhiteSpace(item.NcmSugerida))
-                {
-                    descricao = $"{descricao} NCM sustentada: {item.NcmSugerida}.";
-                }
+                // A mensagem deixa claro o que foi declarado e o que se sustenta na evidência.
+                var baseDescricao = !string.IsNullOrWhiteSpace(item.Incorreto)
+                    ? $"{item.Incorreto} não se sustenta na evidência."
+                    : item.Achados.FirstOrDefault(a => a.Classe == ClasseAchado.InconsistenciaNegocio)?.Descricao
+                        ?? $"Item {item.ItemId} divergente.";
+                var descricao = string.IsNullOrWhiteSpace(item.NcmSugerida)
+                    ? baseDescricao
+                    : $"{baseDescricao} NCM sustentada: {item.NcmSugerida}.";
 
                 lista.Add(new AchadoSofia
                 {
