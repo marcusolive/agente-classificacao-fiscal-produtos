@@ -92,6 +92,50 @@ public class SofiaA2ATests : IClassFixture<FabricaApi>
     }
 
     [Fact]
+    public async Task Nfe_pela_sofia_le_os_itens_e_aponta_o_ncm_declarado_errado()
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+        _fabrica.Conhecimento.Registrar("Cafe torrado", new Evidencia
+        {
+            Fonte = "Classif/0901.21.00",
+            FaixaAutoridade = FaixaAutoridade.LegislacaoVigente,
+            Trecho = "Cafe torrado > Nao descafeinado",
+            Vigencia = hoje,
+            Ncm = "09012100"
+        });
+        _fabrica.Conhecimento.Registrar("Acucar cristal", new Evidencia
+        {
+            Fonte = "Classif/1701.14.00",
+            FaixaAutoridade = FaixaAutoridade.LegislacaoVigente,
+            Trecho = "Outros acucares de cana",
+            Vigencia = hoje,
+            Ncm = "17011400"
+        });
+
+        // A SOFIA envia a NF-e como XML no texto do documento. O açúcar vem com NCM de informática.
+        var nfe = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <nfeProc xmlns="http://www.portalfiscal.inf.br/nfe"><NFe><infNFe>
+        <det nItem="1"><prod><xProd>Cafe torrado e moido, nao descafeinado</xProd><NCM>09012100</NCM><CFOP>5102</CFOP></prod></det>
+        <det nItem="2"><prod><xProd>Acucar cristal de cana</xProd><NCM>84713012</NCM><CFOP>5102</CFOP></prod></det>
+        </infNFe></NFe></nfeProc>
+        """;
+
+        var cliente = Autenticado(_fabrica);
+        var resposta = await EnviarAsync(cliente, Pedido(
+            "dddddddd-dddd-dddd-dddd-dddddddddddd",
+            "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+            new { instrucoes = "Confira se os itens estão corretos." },
+            nfe));
+        var resultado = Resultado(resposta);
+
+        // Dois itens lidos; o açúcar com NCM declarada errada vira achado.
+        Assert.Equal("concluido", resultado.GetProperty("status").GetString());
+        Assert.True(resultado.GetProperty("achados").GetArrayLength() >= 1);
+        Assert.Contains("17011400", resultado.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Documento_sem_texto_e_metodo_errado_sao_erro_de_protocolo()
     {
         var cliente = Autenticado(_fabrica);
