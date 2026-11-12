@@ -99,6 +99,7 @@ PDF e XML de notas são aceitos como extração de texto. Arquivo sem texto iden
 - **FR-013**: Caso corporativo confirmado DEVE guardar decisão, papel da autoridade, data, empresa e execução de origem. Sem esses vínculos, a ingestão do caso DEVE ser recusada. Sugestão não confirmada NÃO DEVE ser gravada como precedente.
 - **FR-014**: A ferramenta `consultar_conhecimento` NÃO DEVE devolver caso corporativo. A administração DEVE permitir ler o caso gravado. A Api.Agente NÃO DEVE acessar o PostgreSQL da Api.RAG.
 - **FR-015**: Tamanho de chunk, sobreposição, modelo de embeddings, dimensão, topK e limiar NÃO DEVEM ser fixados nesta specification. Eles ficam no plano técnico, avaliados com exemplos, antes de virarem padrão. Até lá, a implementação NÃO DEVE inventar esses números.
+- **FR-016**: A administração DEVE permitir remover, por origem, todas as versões de uma base de referência (`DELETE /v1/documentos?origem`), protegida pela mesma chave de ingestão. A operação é destrutiva e limitada à origem informada, para substituir uma base oficial recarregando-a (ex.: a tabela NCM), e NÃO DEVE afetar outras origens. Remove também os chunks dessas versões.
 
 ### Key Entities
 

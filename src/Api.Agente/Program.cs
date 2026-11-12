@@ -8,6 +8,9 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<OpcoesAnalise>(builder.Configuration.GetSection("Analise"));
+// Limite padrao de arquivo (NFe/XML) quando o ambiente nao define Analise:TamanhoMaximoBytes.
+// 4 MB fica abaixo do teto de corpo da Vercel; o ambiente pode sobrescrever.
+builder.Services.PostConfigure<OpcoesAnalise>(analise => analise.TamanhoMaximoBytes ??= 4_000_000);
 builder.Services.Configure<OpcoesOpenAi>(builder.Configuration.GetSection("OpenAI"));
 builder.Services.Configure<OpcoesConhecimento>(builder.Configuration.GetSection("Conhecimento"));
 builder.Services.Configure<OpcoesSofia>(builder.Configuration.GetSection("Sofia"));

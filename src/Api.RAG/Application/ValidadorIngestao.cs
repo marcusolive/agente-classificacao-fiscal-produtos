@@ -5,13 +5,18 @@ namespace Api.RAG.Application;
 
 public sealed class ValidadorIngestao(IOptions<OpcoesIngestao> opcoes)
 {
-    public string Validar(PedidoIngestao pedido, string? chaveInformada, Documento? existente)
+    public void ValidarChave(string? chaveInformada)
     {
         var chave = opcoes.Value.Chave;
         if (string.IsNullOrWhiteSpace(chave) || !string.Equals(chave, chaveInformada, StringComparison.Ordinal))
         {
             throw new RecusaIngestaoException("A chave de ingestão não confere.");
         }
+    }
+
+    public string Validar(PedidoIngestao pedido, string? chaveInformada, Documento? existente)
+    {
+        ValidarChave(chaveInformada);
 
         Exigir(pedido.Origem, "origem");
         Exigir(pedido.Identificacao, "identificacao");

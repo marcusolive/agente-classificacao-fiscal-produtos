@@ -71,6 +71,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErroResposta'
+    delete:
+      tags:
+        - Documentos v1
+      summary: Remove todas as versões de uma origem.
+      description: 'Exige a chave X-Chave-Ingestao. Apaga documentos e chunks da origem informada, para recarga de uma base de referência (ex.: a tabela NCM). Operação administrativa e destrutiva, limitada a uma origem.'
+      operationId: RemoverDocumentosV1
+      parameters:
+        - name: origem
+          in: query
+          description: Origem do documento.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErroResposta'
   '/v1/documentos/{documentoId}':
     get:
       tags:

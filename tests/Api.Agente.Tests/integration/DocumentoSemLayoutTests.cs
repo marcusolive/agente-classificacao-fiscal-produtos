@@ -55,12 +55,14 @@ public class DocumentoSemLayoutTests : IClassFixture<FabricaApi>
     }
 
     [Fact]
-    public async Task Arquivo_sem_limite_configurado_e_recusado_sem_bloqueio()
+    public async Task Formato_sem_layout_registrado_e_recusado_sem_bloqueio()
     {
+        // Planilha nao tem layout: recusa estrutural. O limite agora tem default (4 MB),
+        // entao a entrada passa do limite e para na checagem de layout, nao antes.
         var resposta = await PostarArquivoAsync(_fabrica.CreateClient(), "planilha", Convert.ToBase64String("planilha"u8.ToArray()));
         Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
         var corpo = await resposta.Content.ReadAsStringAsync();
-        Assert.Contains("Limite de arquivo não configurado", corpo);
+        Assert.Contains("Layout não registrado", corpo);
         Assert.DoesNotContain("bloqueada", corpo, StringComparison.OrdinalIgnoreCase);
     }
 

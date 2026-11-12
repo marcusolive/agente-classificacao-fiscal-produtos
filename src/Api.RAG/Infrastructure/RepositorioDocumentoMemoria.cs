@@ -111,6 +111,28 @@ public sealed class RepositorioDocumentoMemoria : IRepositorioDocumento
         return Task.CompletedTask;
     }
 
+    public Task<int> RemoverPorOrigemAsync(string origem, CancellationToken ct)
+    {
+        var removidos = 0;
+        foreach (var par in _porId.ToArray())
+        {
+            var documento = JsonSerializer.Deserialize<Documento>(par.Value, JsonDaBase.Opcoes);
+            if (documento is null || documento.Origem != origem)
+            {
+                continue;
+            }
+
+            if (_porId.TryRemove(par.Key, out _))
+            {
+                removidos++;
+            }
+
+            _porIdentidade.TryRemove(Chave(documento.Origem, documento.Identificacao, documento.Versao), out _);
+        }
+
+        return Task.FromResult(removidos);
+    }
+
     private static bool Serve(Documento documento, DateOnly vigencia) =>
         documento.Consultavel
         && documento.Estado == EstadoDocumento.Gravado

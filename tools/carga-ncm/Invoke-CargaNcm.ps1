@@ -16,7 +16,7 @@
       vigenciaInicial = Data_Inicio do registro
       vigenciaFinal   = Data_Fim, ou vazio quando for 31/12/9999 (intervalo aberto)
       formato         = texto
-      conteudo        = "<Codigo> — <Descricao>"
+      conteudo        = "<Codigo> — <caminho hierarquico>" (capitulo > posicao > ... > folha)
       ncm             = Codigo
 
     A ingestão é idempotente: reenviar o mesmo conteúdo responde "ignorado" e não
@@ -103,6 +103,49 @@ $dados = $json | ConvertFrom-Json
 $registros = @($dados.Nomenclaturas)
 Write-Host ("Tabela: {0} | Ato: {1} | Registros: {2}" -f $dados.Data_Ultima_Atualizacao_NCM, $dados.Ato, $registros.Count) -ForegroundColor Cyan
 
+# --- Indice de descricoes por string de digitos --------------------------------
+# A tabela traz todos os niveis (capitulo 2d, posicao 4d, subposicoes 5/6/7d e
+# item 8d). Para o item de 8 digitos embarcar bem na busca vetorial, o conteudo
+# precisa carregar a hierarquia (ex.: "Cafe torrado > Nao descafeinado"), e nao so
+# a folha terse ("-- Nao descafeinado"). Este indice resolve os ancestrais.
+$descPorDigito = @{}
+foreach ($reg in $registros) {
+    $dReg = ($reg.Codigo -replace '[^0-9]', '')
+    if (-not $descPorDigito.ContainsKey($dReg)) { $descPorDigito[$dReg] = $reg.Descricao }
+}
+
+function Format-Nivel([string]$texto) {
+    # Tira os tracos de nivel a esquerda ("- ", "-- "), tags HTML, dois-pontos a
+    # direita e colapsa espacos. O texto vira entrada de busca, nao marcacao.
+    if (-not $texto) { return '' }
+    $t = $texto -replace '<[^>]+>', ''
+    $t = $t -replace '^[\s\-]+', ''
+    $t = $t -replace '[\s:]+$', ''
+    $t = $t -replace '\s+', ' '
+    return $t.Trim()
+}
+
+function New-ConteudoNcm([string]$codigo) {
+    # Monta "<codigo> — <capitulo> > <posicao> > ... > <folha>" seguindo os
+    # prefixos de digitos presentes na tabela.
+    $d = ($codigo -replace '[^0-9]', '')
+    $partes = New-Object System.Collections.Generic.List[string]
+    foreach ($len in 2, 4, 5, 6, 7) {
+        if ($d.Length -gt $len) {
+            $pref = $d.Substring(0, $len)
+            if ($descPorDigito.ContainsKey($pref)) {
+                $nivel = Format-Nivel $descPorDigito[$pref]
+                if ($nivel) { $partes.Add($nivel) }
+            }
+        }
+    }
+    if ($descPorDigito.ContainsKey($d)) {
+        $folha = Format-Nivel $descPorDigito[$d]
+        if ($folha) { $partes.Add($folha) }
+    }
+    return ("{0} — {1}" -f $codigo, ($partes -join ' > '))
+}
+
 # --- Helpers -------------------------------------------------------------------
 function ConvertTo-IsoDate([string]$br) {
     # Entrada dd/MM/yyyy -> yyyy-MM-dd (InvariantCulture).
@@ -137,7 +180,7 @@ foreach ($r in $fila) {
         faixa           = 'legislacaoVigente'
         vigenciaInicial = ConvertTo-IsoDate $r.Data_Inicio
         formato         = 'texto'
-        conteudo        = ("{0} — {1}" -f $r.Codigo, $r.Descricao)
+        conteudo        = (New-ConteudoNcm $r.Codigo)
         ncm             = $r.Codigo
     }
     if ($r.Data_Fim -ne '31/12/9999') { $corpo.vigenciaFinal = ConvertTo-IsoDate $r.Data_Fim }

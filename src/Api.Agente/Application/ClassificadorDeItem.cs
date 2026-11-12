@@ -10,7 +10,12 @@ public sealed class ClassificadorDeItem(
 {
     private static readonly string[] Tributos = ["ipi", "icms", "cest", "pis", "cofins", "ibsCbs"];
 
-    public async Task<ItemAnalise> ClassificarAsync(string itemId, string texto, DateOnly vigencia, CancellationToken ct)
+    public async Task<ItemAnalise> ClassificarAsync(
+        string itemId,
+        string texto,
+        DateOnly vigencia,
+        CancellationToken ct,
+        bool exigirDadosEssenciais = true)
     {
         var item = new ItemAnalise
         {
@@ -19,7 +24,11 @@ public sealed class ClassificadorDeItem(
             Atributos = NormalizadorProduto.Normalizar(texto)
         };
 
-        var ausentes = NormalizadorProduto.DadosEssenciaisAusentes(item.Atributos);
+        // Entrada de texto livre (ex.: descricao de NFe) nao vem no formato chave:valor;
+        // classifica direto pela descricao em vez de exigir funcao/composicao/apresentacao.
+        var ausentes = exigirDadosEssenciais
+            ? NormalizadorProduto.DadosEssenciaisAusentes(item.Atributos)
+            : (IReadOnlyList<string>)Array.Empty<string>();
         if (ausentes.Count > 0)
         {
             item.Situacao = SituacaoItem.DadoAusente;

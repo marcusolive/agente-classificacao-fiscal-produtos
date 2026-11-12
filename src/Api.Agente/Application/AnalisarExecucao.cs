@@ -25,11 +25,14 @@ public sealed class AnalisarExecucao(
         };
         execucao.ValidacoesNaoRealizadas.Add("layout de item não registrado");
 
+        // Arquivo (NFe) traz a descricao livre do produto, nao o formato chave:valor.
+        var textoLivre = pedido.Entrada.Tipo != TipoEntrada.Texto;
         var itens = Itens(pedido.Entrada);
         for (var i = 0; i < itens.Count; i++)
         {
             var contexto = ContextoDoItem.Resolver(pedido, itens[i]);
-            var classificado = await classificador.ClassificarAsync((i + 1).ToString(), itens[i].Descricao!.Trim(), contexto.DataVigencia, ct);
+            var classificado = await classificador.ClassificarAsync(
+                (i + 1).ToString(), itens[i].Descricao!.Trim(), contexto.DataVigencia, ct, exigirDadosEssenciais: !textoLivre);
             classificado.Contexto = contexto;
             if (pedido.Intencao == IntencaoAnalise.AuditarDeclarado)
             {
@@ -58,6 +61,12 @@ public sealed class AnalisarExecucao(
 
     private static List<ItemPedido> Itens(EntradaPedido entrada)
     {
+        // A NFe ja foi validada (base64, limite e layout) antes de chegar aqui.
+        if (entrada.Tipo == TipoEntrada.XmlNfe)
+        {
+            return LeitorNfe.Ler(Convert.FromBase64String(entrada.Arquivo!.ConteudoBase64!));
+        }
+
         var itens = entrada.Itens.Where(i => !string.IsNullOrWhiteSpace(i.Descricao)).ToList();
         if (itens.Count > 0)
         {

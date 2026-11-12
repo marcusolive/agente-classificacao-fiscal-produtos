@@ -31,6 +31,13 @@ public static class DocumentosEndpoints
             .WithDescription("Filtra por origem e identificação. Cada versão permanece separada.")
             .Produces<IReadOnlyList<Documento>>(StatusCodes.Status200OK)
             .Produces<ErroResposta>(StatusCodes.Status400BadRequest);
+
+        v1.MapDelete("/documentos", RemoverAsync)
+            .WithName("RemoverDocumentosV1")
+            .WithSummary("Remove todas as versões de uma origem.")
+            .WithDescription("Exige a chave X-Chave-Ingestao. Apaga documentos e chunks da origem informada, para recarga de uma base de referência (ex.: a tabela NCM). Operação administrativa e destrutiva, limitada a uma origem.")
+            .Produces(StatusCodes.Status200OK)
+            .Produces<ErroResposta>(StatusCodes.Status400BadRequest);
     }
 
     private static async Task<IResult> CriarAsync(
@@ -68,5 +75,22 @@ public static class DocumentosEndpoints
         }
 
         return Results.Ok(await ingestao.ListarAsync(origem, identificacao, ct));
+    }
+
+    private static async Task<IResult> RemoverAsync(
+        string? origem,
+        IngestaoDocumento ingestao,
+        HttpRequest requisicao,
+        CancellationToken ct)
+    {
+        try
+        {
+            var removidos = await ingestao.RemoverPorOrigemAsync(origem ?? "", requisicao.Headers["X-Chave-Ingestao"], ct);
+            return Results.Ok(new { origem = (origem ?? "").Trim(), removidos });
+        }
+        catch (RecusaIngestaoException ex)
+        {
+            return Results.BadRequest(new ErroResposta { Erro = ex.Message });
+        }
     }
 }
