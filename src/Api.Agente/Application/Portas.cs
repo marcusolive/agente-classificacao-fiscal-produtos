@@ -15,8 +15,10 @@ public interface IRepositorioExecucao
 
 public sealed class ContextoModelo
 {
-    public required Evidencia Vencedora { get; init; }
+    // Vencedora definida: confirmar essa NCM. Nula: empate, escolher entre as evidências.
+    public Evidencia? Vencedora { get; init; }
     public required IReadOnlyList<Evidencia> Evidencias { get; init; }
+    public string? Descricao { get; init; }
 }
 
 public sealed class SaidaModelo

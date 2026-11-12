@@ -6,10 +6,13 @@ public sealed class AnalisadorDeterministico : IAnalisadorModelo
 {
     public Task<SaidaModelo> AnalisarAsync(ContextoModelo contexto, CancellationToken ct)
     {
+        // Vencedora definida: confirma. Empate (sem vencedora): escolhe o primeiro candidato.
+        var escolhida = contexto.Vencedora
+            ?? contexto.Evidencias.FirstOrDefault(e => !string.IsNullOrWhiteSpace(e.Ncm));
         return Task.FromResult(new SaidaModelo
         {
-            Ncm = contexto.Vencedora.Ncm,
-            Explicacao = contexto.Vencedora.Trecho
+            Ncm = escolhida?.Ncm,
+            Explicacao = escolhida?.Trecho
         });
     }
 }

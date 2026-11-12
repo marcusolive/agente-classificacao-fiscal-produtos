@@ -56,7 +56,7 @@ public class RevisaoHumanaTests : IClassFixture<FabricaApi>
     }
 
     [Fact]
-    public async Task Empate_na_mesma_faixa_nao_escolhe_vencedor_nem_bloqueia()
+    public async Task Empate_na_mesma_faixa_e_desfeito_pelo_modelo_com_revisao()
     {
         var cliente = _fabrica.CreateClient();
         var json = await ClienteDeAnalise.PostarAsync(cliente, "sugerirNcm", new
@@ -66,10 +66,14 @@ public class RevisaoHumanaTests : IClassFixture<FabricaApi>
         });
         var item = json.GetProperty("itens")[0];
         Assert.NotEqual("bloqueada", json.GetProperty("estadoNota").GetString());
-        Assert.Equal(JsonValueKind.Null, item.GetProperty("ncmSugerida").ValueKind);
+        // O empate é desfeito: o modelo escolhe um candidato da mesma faixa (sem inventar).
+        Assert.Equal("sugerido", item.GetProperty("situacao").GetString());
+        Assert.Contains(item.GetProperty("ncmSugerida").GetString(), new[] { "11111111", "22222222" });
+        // Confiança nula (empate) e revisão humana sempre recomendada.
         Assert.Equal(JsonValueKind.Null, item.GetProperty("confianca").ValueKind);
         Assert.True(item.GetProperty("revisaoHumana").GetBoolean());
         Assert.False(item.GetProperty("impactoRelevante").GetBoolean());
+        Assert.Equal("indicioIa", item.GetProperty("achados")[0].GetProperty("classe").GetString());
     }
 
     [Fact]
