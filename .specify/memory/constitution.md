@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.11 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-12
+**Versão**: 1.0.12 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-12
 
 ## 1. Propósito e escopo
 
@@ -434,6 +434,12 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Motivo: com a NCM enriquecida por hierarquia, a recuperação passou a trazer a família certa, mas vários subtipos empatavam (ex.: café "descafeinado" vs "não descafeinado"), e a busca vetorial não distingue a negação. O modelo desfaz esse empate sobre as evidências.
 - Impacto: a specification `001` (FR-010) é atualizada. As salvaguardas seguem: sem invenção de código, e revisão humana no empate. As demais specifications permanecem.
 - Responsável: mantenedor do produto, a pedido do aluno, para o agente retornar a NCM dentro da SOFIA.
+
+#### 1.0.12 — 2026-11-12
+
+- Conferência de NF-e pela SOFIA: quando o texto do documento é uma NF-e (XML, reconhecido por marcadores como `infNFe`/`det`/`prod`), o agente lê os itens e audita a NCM declarada de cada um, em vez de tratar o XML inteiro como uma descrição só. Declaração que não se sustenta vira achado e bloqueia a nota. Texto sem NF-e continua sendo descrição de produto para sugerir NCM.
+- Impacto: a specification `004` (FR-011) é atualizada. As demais permanecem. Reaproveita a leitura de NF-e (1.0.9) e o desempate (1.0.11).
+- Responsável: mantenedor do produto, a pedido do aluno, para conferir NF-e dentro da SOFIA.
 
 ## 9. Decisões pendentes
 

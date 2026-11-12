@@ -1,3 +1,4 @@
+using System.Text;
 using Api.Agente.Domain;
 using Api.Agente.Infrastructure;
 using Microsoft.Extensions.Options;
@@ -77,7 +78,8 @@ public sealed class AtendenteSofia(
     private static PedidoAnalise MontarPedido(SolicitacaoAnaliseSofia pedido, DocumentoSofia documento)
     {
         var contexto = pedido.Contexto;
-        return new PedidoAnalise
+        var texto = documento.Texto!.Trim();
+        var pedidoAnalise = new PedidoAnalise
         {
             Usuario = pedido.Usuario!.Nome!.Trim(),
             Empresa = Preenchido(contexto?.Empresa, "não informado"),
@@ -85,15 +87,45 @@ public sealed class AtendenteSofia(
             RegimeTributario = Preenchido(contexto?.RegimeTributario, "naoInformado"),
             TipoOperacao = Preenchido(contexto?.TipoOperacao, "naoInformado"),
             Papel = Preenchido(contexto?.Papel, "fiscal"),
-            Finalidade = Preenchido(contexto?.Finalidade, "sugerir"),
-            DataVigencia = contexto?.DataVigencia ?? DateOnly.FromDateTime(DateTime.UtcNow),
-            Intencao = IntencaoAnalise.SugerirNcm,
-            Entrada = new EntradaPedido
-            {
-                Tipo = TipoEntrada.Texto,
-                Texto = documento.Texto!.Trim()
-            }
+            Finalidade = Preenchido(contexto?.Finalidade, "sugerir")
         };
+
+        if (EhNotaFiscal(documento, texto))
+        {
+            // NFe: lê os itens e confere a NCM declarada de cada um (auditoria).
+            pedidoAnalise.Finalidade = "auditar";
+            pedidoAnalise.Intencao = IntencaoAnalise.AuditarDeclarado;
+            pedidoAnalise.Entrada = new EntradaPedido
+            {
+                Tipo = TipoEntrada.XmlNfe,
+                Arquivo = new ArquivoPedido
+                {
+                    Nome = Preenchido(documento.Nome, "nota.xml"),
+                    ConteudoBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(texto))
+                }
+            };
+        }
+        else
+        {
+            // Descrição de produto: sugere a NCM.
+            pedidoAnalise.Intencao = IntencaoAnalise.SugerirNcm;
+            pedidoAnalise.Entrada = new EntradaPedido { Tipo = TipoEntrada.Texto, Texto = texto };
+        }
+
+        // A vigência vem do contexto quando informada; senão, a data corrente.
+        pedidoAnalise.DataVigencia = contexto?.DataVigencia ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        return pedidoAnalise;
+    }
+
+    private static bool EhNotaFiscal(DocumentoSofia documento, string texto)
+    {
+        var tipo = documento.Tipo ?? "";
+        var marcadores = texto.Contains("<infNFe", StringComparison.OrdinalIgnoreCase)
+            || texto.Contains("<NFe", StringComparison.OrdinalIgnoreCase)
+            || texto.Contains("nfeProc", StringComparison.OrdinalIgnoreCase)
+            || texto.Contains("<det", StringComparison.OrdinalIgnoreCase);
+        var ehXml = tipo.Contains("xml", StringComparison.OrdinalIgnoreCase) && texto.Contains("<prod", StringComparison.OrdinalIgnoreCase);
+        return marcadores || ehXml;
     }
 
     private static string Preenchido(string? valor, string padrao) =>
