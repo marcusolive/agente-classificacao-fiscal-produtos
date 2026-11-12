@@ -4,26 +4,6 @@ namespace Api.Agente.Application;
 
 public static class MontadorResultadoSofia
 {
-    public static ResultadoAnaliseSofia ContextoAusente(
-        string idExecucao,
-        string idSolicitacao,
-        AgenteSofia agente,
-        IReadOnlyList<string> documentos,
-        IReadOnlyList<string> faltas)
-    {
-        var mensagem = "Informe no contexto: " + string.Join(", ", faltas) + ".";
-        return new ResultadoAnaliseSofia
-        {
-            IdExecucao = idExecucao,
-            IdSolicitacao = idSolicitacao,
-            Agente = agente,
-            Status = "erro",
-            Analise = mensagem,
-            Observacoes = documentos.ToList(),
-            Erro = new ErroSofia { Codigo = "contexto-ausente", Mensagem = mensagem }
-        };
-    }
-
     public static ResultadoAnaliseSofia DaAnalise(
         string idExecucao,
         string idSolicitacao,

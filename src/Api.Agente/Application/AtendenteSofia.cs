@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Api.Agente.Domain;
 using Api.Agente.Infrastructure;
 using Microsoft.Extensions.Options;
@@ -13,17 +12,6 @@ public sealed class AtendenteSofia(
 {
     public const string AnaliseSemAchado =
         "Nenhum achado foi produzido. O texto dos documentos foi tratado como dado e não como instrução.";
-
-    private static readonly (string Campo, Func<ContextoSofia?, bool> Ausente)[] Campos =
-    [
-        ("empresa", c => string.IsNullOrWhiteSpace(c?.Empresa)),
-        ("uf", c => string.IsNullOrWhiteSpace(c?.Uf)),
-        ("regimeTributario", c => string.IsNullOrWhiteSpace(c?.RegimeTributario)),
-        ("dataVigencia", c => c?.DataVigencia is null),
-        ("papel", c => string.IsNullOrWhiteSpace(c?.Papel)),
-        ("finalidade", c => string.IsNullOrWhiteSpace(c?.Finalidade)),
-        ("tipoOperacao", c => string.IsNullOrWhiteSpace(c?.TipoOperacao))
-    ];
 
     public async Task<(string TarefaId, ResultadoAnaliseSofia Resultado)> AtenderAsync(
         SolicitacaoAnaliseSofia? pedido,
@@ -52,13 +40,6 @@ public sealed class AtendenteSofia(
     private async Task<ResultadoAnaliseSofia> CriarAsync(SolicitacaoAnaliseSofia pedido, CancellationToken ct)
     {
         var agente = Identidade();
-        var documentos = pedido.Documentos!.Select(d => d.IdDocumento!.Trim()).ToList();
-        var faltas = Campos.Where(c => c.Ausente(pedido.Contexto)).Select(c => c.Campo).ToList();
-        if (faltas.Count > 0)
-        {
-            return MontadorResultadoSofia.ContextoAusente(pedido.IdExecucao!, pedido.IdSolicitacao!, agente, documentos, faltas);
-        }
-
         var analisados = new List<DocumentoAnalisadoSofia>();
         foreach (var documento in pedido.Documentos!)
         {
@@ -73,25 +54,13 @@ public sealed class AtendenteSofia(
         DocumentoSofia documento,
         CancellationToken ct)
     {
-        PedidoAnalise? entrada;
+        // A SOFIA envia a descrição textual do documento, não um JSON de pedido.
+        // Classificamos essa descrição direto, com a intenção de sugerir NCM. O
+        // contexto de negócio é opcional: usa o que a SOFIA informar e defaults no resto.
+        var entrada = MontarPedido(pedido, documento);
         try
         {
-            entrada = JsonSerializer.Deserialize<PedidoAnalise>(documento.Texto ?? "", JsonDaExecucao.Opcoes);
-        }
-        catch (JsonException)
-        {
-            return new DocumentoAnalisadoSofia(documento.IdDocumento!.Trim(), null, "pedido-ilegivel", "O texto do documento não é o pedido de análise.");
-        }
-
-        if (entrada is null)
-        {
-            return new DocumentoAnalisadoSofia(documento.IdDocumento!.Trim(), null, "pedido-ilegivel", "O texto do documento não é o pedido de análise.");
-        }
-
-        AplicarContexto(entrada, pedido);
-        try
-        {
-            var execucao = await analise.ExecutarAsync(entrada, ct);
+            var execucao = await analise.ExecutarAsync(entrada, ct, textoLivre: true);
             var falha = execucao.EstadoNota == EstadoNota.FalhaTecnica;
             return new DocumentoAnalisadoSofia(
                 documento.IdDocumento!.Trim(),
@@ -105,19 +74,30 @@ public sealed class AtendenteSofia(
         }
     }
 
-    private static void AplicarContexto(PedidoAnalise entrada, SolicitacaoAnaliseSofia pedido)
+    private static PedidoAnalise MontarPedido(SolicitacaoAnaliseSofia pedido, DocumentoSofia documento)
     {
-        var contexto = pedido.Contexto!;
-        entrada.Usuario = pedido.Usuario!.Nome!.Trim();
-        entrada.Empresa = contexto.Empresa!.Trim();
-        entrada.Uf = contexto.Uf!.Trim();
-        entrada.RegimeTributario = contexto.RegimeTributario!.Trim();
-        entrada.DataVigencia = contexto.DataVigencia!.Value;
-        entrada.Papel = contexto.Papel!.Trim();
-        entrada.Finalidade = contexto.Finalidade!.Trim();
-        entrada.TipoOperacao = contexto.TipoOperacao!.Trim();
-        entrada.Intencao = IntencaoAnalise.SugerirNcm;
+        var contexto = pedido.Contexto;
+        return new PedidoAnalise
+        {
+            Usuario = pedido.Usuario!.Nome!.Trim(),
+            Empresa = Preenchido(contexto?.Empresa, "não informado"),
+            Uf = Preenchido(contexto?.Uf, "NA"),
+            RegimeTributario = Preenchido(contexto?.RegimeTributario, "naoInformado"),
+            TipoOperacao = Preenchido(contexto?.TipoOperacao, "naoInformado"),
+            Papel = Preenchido(contexto?.Papel, "fiscal"),
+            Finalidade = Preenchido(contexto?.Finalidade, "sugerir"),
+            DataVigencia = contexto?.DataVigencia ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            Intencao = IntencaoAnalise.SugerirNcm,
+            Entrada = new EntradaPedido
+            {
+                Tipo = TipoEntrada.Texto,
+                Texto = documento.Texto!.Trim()
+            }
+        };
     }
+
+    private static string Preenchido(string? valor, string padrao) =>
+        string.IsNullOrWhiteSpace(valor) ? padrao : valor.Trim();
 
     private AgenteSofia Identidade()
     {

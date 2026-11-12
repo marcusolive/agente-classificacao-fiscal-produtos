@@ -8,7 +8,7 @@ public sealed class AnalisarExecucao(
     IRepositorioExecucao repositorio,
     RegistroDeLayouts layouts)
 {
-    public async Task<Execucao> ExecutarAsync(PedidoAnalise pedido, CancellationToken ct)
+    public async Task<Execucao> ExecutarAsync(PedidoAnalise pedido, CancellationToken ct, bool textoLivre = false)
     {
         validador.Validar(pedido);
         var execucao = new Execucao
@@ -25,14 +25,14 @@ public sealed class AnalisarExecucao(
         };
         execucao.ValidacoesNaoRealizadas.Add("layout de item não registrado");
 
-        // Arquivo (NFe) traz a descricao livre do produto, nao o formato chave:valor.
-        var textoLivre = pedido.Entrada.Tipo != TipoEntrada.Texto;
+        // NFe e a ponte da SOFIA trazem a descricao livre do produto, nao o formato chave:valor.
+        var descricaoLivre = textoLivre || pedido.Entrada.Tipo != TipoEntrada.Texto;
         var itens = Itens(pedido.Entrada);
         for (var i = 0; i < itens.Count; i++)
         {
             var contexto = ContextoDoItem.Resolver(pedido, itens[i]);
             var classificado = await classificador.ClassificarAsync(
-                (i + 1).ToString(), itens[i].Descricao!.Trim(), contexto.DataVigencia, ct, exigirDadosEssenciais: !textoLivre);
+                (i + 1).ToString(), itens[i].Descricao!.Trim(), contexto.DataVigencia, ct, exigirDadosEssenciais: !descricaoLivre);
             classificado.Contexto = contexto;
             if (pedido.Intencao == IntencaoAnalise.AuditarDeclarado)
             {

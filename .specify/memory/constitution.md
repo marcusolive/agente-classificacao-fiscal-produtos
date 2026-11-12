@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.9 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-11
+**Versão**: 1.0.10 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-12
 
 ## 1. Propósito e escopo
 
@@ -420,6 +420,13 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Carga da NCM enriquecida com a hierarquia (capítulo, posição, subposições e folha) no conteúdo do chunk, para a busca vetorial distinguir o código correto. É dado operacional, não princípio.
 - Impacto: a specification `001` (FR-007 e leitura de arquivo) e a `003` (remoção por origem) são atualizadas. As demais permanecem. Nenhum layout, alíquota ou regra fiscal foi inventado.
 - Responsável: mantenedor do produto, a pedido do aluno, para conferir NF-e e melhorar a recuperação de NCM.
+
+#### 1.0.10 — 2026-11-12
+
+- A ponte A2A foi alinhada ao contrato REAL da SOFIA (verificado no código dela): o `contexto` traz só `idioma` e `instrucoes`, e o `texto` de cada documento é a descrição textual do produto, não um JSON de `/v1/analises`. Antes o agente exigia os sete campos de negócio no contexto e um pedido em JSON, então sempre respondia "contexto ausente" e nunca classificava dentro da SOFIA.
+- Agora os campos de negócio são opcionais (usados quando a SOFIA os informa, defaults caso contrário, vigência = data corrente), e a descrição do documento é classificada direto, só para sugerir NCM. As salvaguardas (autoridade, empate, limitação) seguem valendo. A análise REST `/v1/analises` não muda.
+- Impacto: a specification `004` (FR-010 e FR-011) é atualizada. As demais permanecem. Nenhuma regra fiscal foi inventada.
+- Responsável: mantenedor do produto, a pedido do aluno, para a integração funcionar de ponta a ponta na SOFIA.
 
 ## 9. Decisões pendentes
 
