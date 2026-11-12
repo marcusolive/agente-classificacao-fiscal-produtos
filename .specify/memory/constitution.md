@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.10 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-12
+**Versão**: 1.0.11 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-12
 
 ## 1. Propósito e escopo
 
@@ -192,7 +192,7 @@ A Api.Agente **DEVE** executar a análise nestas etapas:
 7. Extrair de cada item a descrição, a unidade, a quantidade, a NCM, o CEST, o CFOP, o CST e os tributos de IPI, ICMS, PIS/COFINS e IBS/CBS.
 8. Normalizar o produto de cada item em função, material, composição, uso, apresentação e termos técnicos, preservando o texto original.
 9. Detectar lacunas, ambiguidades e conflitos entre descrição, XML do item e anexos.
-10. Interromper e pedir o dado essencial ausente na entrada de texto livre, sem classificar e sem bloquear enquanto composição, função ou apresentação forem insuficientes. Quando o item vier de um documento que já traz a descrição do produto, como a NF-e, essa descrição **DEVE** ser classificada diretamente; as salvaguardas seguintes continuam valendo (ordem de autoridade, empate sem vencedor inventado e ausência de evidência declarada como limitação).
+10. Interromper e pedir o dado essencial ausente na entrada de texto livre, sem classificar e sem bloquear enquanto composição, função ou apresentação forem insuficientes. Quando o item vier de um documento que já traz a descrição do produto, como a NF-e, essa descrição **DEVE** ser classificada diretamente; as salvaguardas seguintes continuam valendo (ordem de autoridade, empate resolvido só entre os candidatos recuperados e com revisão humana, e ausência de evidência declarada como limitação).
 11. Fixar, para cada item, a vigência, a UF, o regime, a origem, o destino e o tipo de operação.
 12. Consultar por MCP os chunks do manual e das bases de NCM, notas, Regras Gerais de Interpretação, IPI, ICMS, CEST, PIS/COFINS e IBS/CBS na vigência definida.
 13. Recuperar casos corporativos semelhantes e a documentação técnica associada, com fonte e desfecho.
@@ -428,6 +428,13 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Impacto: a specification `004` (FR-010 e FR-011) é atualizada. As demais permanecem. Nenhuma regra fiscal foi inventada.
 - Responsável: mantenedor do produto, a pedido do aluno, para a integração funcionar de ponta a ponta na SOFIA.
 
+#### 1.0.11 — 2026-11-12
+
+- Empate na mesma faixa de autoridade deixa de parar sempre em "sem evidência": o modelo (etapa 18) escolhe o melhor candidato **apenas entre os empatados** (todos já são evidência recuperada), nunca inventando código fora da lista. A confiança do item fica nula e a revisão humana é sempre recomendada (etapa 21, conflito de fontes).
+- Motivo: com a NCM enriquecida por hierarquia, a recuperação passou a trazer a família certa, mas vários subtipos empatavam (ex.: café "descafeinado" vs "não descafeinado"), e a busca vetorial não distingue a negação. O modelo desfaz esse empate sobre as evidências.
+- Impacto: a specification `001` (FR-010) é atualizada. As salvaguardas seguem: sem invenção de código, e revisão humana no empate. As demais specifications permanecem.
+- Responsável: mantenedor do produto, a pedido do aluno, para o agente retornar a NCM dentro da SOFIA.
+
 ## 9. Decisões pendentes
 
 Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementação **NÃO DEVE** transformá-la em comportamento fixo.
@@ -438,7 +445,7 @@ Enquanto uma decisão abaixo não for resolvida na etapa indicada, a implementa�
 | DP-02 | Política de retenção, expiração, exclusão e proteção de dados sensíveis da memória, da trilha e do consumo. | Plano técnico, por ADR, antes da persistência correspondente. | Não persistir conteúdo sensível com política implícita. |
 | DP-03 | Aplicação do isolamento por organização e papéis de acesso. | Esclarecimentos e especificação de segurança. | Não assumir cenário multiorganização nem papel não especificado. |
 | DP-04 | Autoridade e correção resolvidas na specification `002`. A gravação do caso confirmado está na specification `003`. A consulta MCP atual não devolve esse caso, porque não recebe a empresa. | Contrato MCP com empresa, antes de o agente recuperar o caso | Não devolver caso corporativo em `consultar_conhecimento` enquanto a chamada não informar a empresa. |
-| DP-05 | Resolvida em `specs/001-execucao-analise-fiscal/spec.md`. Ordem: legislação vigente, notas e Regras Gerais de Interpretação, caso corporativo confirmado, texto do fornecedor. | Especificação da análise | Seguir essa ordem. Empate na mesma faixa pede revisão humana. |
+| DP-05 | Resolvida em `specs/001-execucao-analise-fiscal/spec.md`. Ordem: legislação vigente, notas e Regras Gerais de Interpretação, caso corporativo confirmado, texto do fornecedor. | Especificação da análise | Seguir essa ordem. Empate na mesma faixa: o modelo escolhe só entre os candidatos da faixa, sem inventar código, e o item sempre pede revisão humana. |
 | DP-06 | Limiar resolvido na specification `001`: confiança baixa é menor que 70 em escala de 0 a 100. Impacto relevante segue em aberto. | Esclarecimento da análise, com exemplos reais de impacto | Não inventar o que é impacto relevante. Calcular confiança na escala decidida. |
 | DP-07 | Tipos resolvidos na specification `001`: descrição textual, XML de NF-e dos itens, planilha, PDF, laudo e ficha técnica. Tamanho máximo e limites numéricos seguem em aberto. | Esclarecimento do contrato de entrada | Não aceitar tipo fora dessa lista e não inventar limite numérico. |
 | DP-08 | Layouts, versões, schemas XSD e validadores por tipo de documento, obtidos de fonte oficial. | Especificação documental, antes do validador correspondente. | Não inventar schema nem aplicar XSD sem schema registrado. |

@@ -53,6 +53,13 @@ public sealed class ClassificadorDeItem(
         var ordenacao = OrdenacaoDeEvidencias.Ordenar(vigentes);
         if (ordenacao.Vencedora is null)
         {
+            // Empate: o modelo desfaz escolhendo entre os candidatos da faixa de topo
+            // (todos já são evidência recuperada), sempre com revisão humana recomendada.
+            if (ordenacao.Empate && await DesempatarAsync(item, texto, ordenacao, ct) is { } desempatado)
+            {
+                return desempatado;
+            }
+
             item.Situacao = SituacaoItem.SemEvidencia;
             item.RevisaoHumana = true;
             item.Achados.Add(new Achado
@@ -60,7 +67,7 @@ public sealed class ClassificadorDeItem(
                 Classe = ClasseAchado.AusenciaEvidencias,
                 Severidade = SeveridadeAchado.Aviso,
                 Descricao = ordenacao.Empate
-                    ? "Empate na mesma faixa de autoridade."
+                    ? "Empate na mesma faixa de autoridade, sem desempate possível."
                     : "Não há evidência suficiente para escolher uma NCM."
             });
             PreencherTratamento(item, null);
@@ -78,7 +85,8 @@ public sealed class ClassificadorDeItem(
             saida = await analisador.AnalisarAsync(new ContextoModelo
             {
                 Vencedora = ordenacao.Vencedora,
-                Evidencias = ordenacao.Ordenadas
+                Evidencias = ordenacao.Ordenadas,
+                Descricao = texto
             }, ct);
         }
         catch (SaidaModeloInvalidaException)
@@ -100,6 +108,52 @@ public sealed class ClassificadorDeItem(
             .Where(n => !string.IsNullOrWhiteSpace(n) && n != saida.Ncm)
             .Distinct()!);
         PreencherTratamento(item, ordenacao.Vencedora);
+        return item;
+    }
+
+    private async Task<ItemAnalise?> DesempatarAsync(ItemAnalise item, string texto, ResultadoOrdenacao ordenacao, CancellationToken ct)
+    {
+        // Só os candidatos da faixa de maior autoridade disputam o desempate.
+        var faixaTopo = ordenacao.Ordenadas[0].FaixaAutoridade;
+        var candidatos = ordenacao.Ordenadas.Where(e => e.FaixaAutoridade == faixaTopo).ToList();
+
+        SaidaModelo saida;
+        try
+        {
+            saida = await analisador.AnalisarAsync(new ContextoModelo
+            {
+                Vencedora = null,
+                Evidencias = candidatos,
+                Descricao = texto
+            }, ct);
+        }
+        catch (SaidaModeloInvalidaException)
+        {
+            return null;
+        }
+
+        if (!ValidadorSaidaModelo.NcmPermitida(saida.Ncm, candidatos))
+        {
+            return null;
+        }
+
+        var vencedora = candidatos.First(e => string.Equals(e.Ncm, saida.Ncm, StringComparison.Ordinal));
+        item.Situacao = SituacaoItem.Sugerido;
+        item.NcmSugerida = saida.Ncm;
+        // Confiança por faixa trata empate como nulo, então o item sempre pede revisão humana.
+        item.Confianca = ConfiancaPorFaixa.Calcular(vencedora.FaixaAutoridade, true, !string.IsNullOrWhiteSpace(vencedora.Trecho));
+        item.RevisaoHumana = true;
+        item.Alternativas.AddRange(candidatos
+            .Select(e => e.Ncm)
+            .Where(n => !string.IsNullOrWhiteSpace(n) && n != saida.Ncm)
+            .Distinct()!);
+        item.Achados.Add(new Achado
+        {
+            Classe = ClasseAchado.IndicioIa,
+            Severidade = SeveridadeAchado.Aviso,
+            Descricao = "Empate entre candidatos da mesma faixa desfeito pelo modelo; confirmar com revisão humana."
+        });
+        PreencherTratamento(item, vencedora);
         return item;
     }
 
