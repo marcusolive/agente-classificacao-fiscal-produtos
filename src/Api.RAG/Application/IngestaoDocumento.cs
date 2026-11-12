@@ -67,6 +67,17 @@ public sealed class IngestaoDocumento(
         };
     }
 
+    public async Task<int> RemoverPorOrigemAsync(string origem, string? chave, CancellationToken ct)
+    {
+        validador.ValidarChave(chave);
+        if (string.IsNullOrWhiteSpace(origem))
+        {
+            throw new RecusaIngestaoException("origem é obrigatória.");
+        }
+
+        return await repositorio.RemoverPorOrigemAsync(origem.Trim(), ct);
+    }
+
     public Task<Documento?> ObterAsync(Guid documentoId, CancellationToken ct) =>
         repositorio.ObterAsync(documentoId, ct);
 

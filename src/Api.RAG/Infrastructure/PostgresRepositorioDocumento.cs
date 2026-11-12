@@ -52,6 +52,29 @@ public sealed class PostgresRepositorioDocumento : IRepositorioDocumento, IDispo
         return valor is string json ? JsonSerializer.Deserialize<Documento>(json, JsonDaBase.Opcoes) : null;
     }
 
+    public async Task<int> RemoverPorOrigemAsync(string origem, CancellationToken ct)
+    {
+        await using var conn = await AbrirAsync(ct);
+        await using var tx = await conn.BeginTransactionAsync(ct);
+        await using (var chunks = new NpgsqlCommand(
+            "DELETE FROM chunk WHERE documento_id IN (SELECT documento_id FROM documento WHERE origem = @origem)",
+            conn, tx))
+        {
+            chunks.Parameters.AddWithValue("origem", origem);
+            await chunks.ExecuteNonQueryAsync(ct);
+        }
+
+        int removidos;
+        await using (var docs = new NpgsqlCommand("DELETE FROM documento WHERE origem = @origem", conn, tx))
+        {
+            docs.Parameters.AddWithValue("origem", origem);
+            removidos = await docs.ExecuteNonQueryAsync(ct);
+        }
+
+        await tx.CommitAsync(ct);
+        return removidos;
+    }
+
     public async Task<IReadOnlyList<Documento>> ListarAsync(string origem, string identificacao, CancellationToken ct)
     {
         await using var conn = await AbrirAsync(ct);

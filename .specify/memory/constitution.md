@@ -12,7 +12,7 @@ As palavras normativas têm o seguinte sentido:
 
 Layouts, regras fiscais, schemas, alíquotas, dispositivos legais e critérios de conformidade **NÃO** são definidos nesta constituição. Esses elementos **DEVEM** ser obtidos de documentos oficiais, ou de decisões corporativas confirmadas, e registrados na especificação correspondente antes da implementação.
 
-**Versão**: 1.0.8 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-10
+**Versão**: 1.0.9 | **Ratificada**: 2026-10-29 | **Última alteração**: 2026-11-11
 
 ## 1. Propósito e escopo
 
@@ -192,7 +192,7 @@ A Api.Agente **DEVE** executar a análise nestas etapas:
 7. Extrair de cada item a descrição, a unidade, a quantidade, a NCM, o CEST, o CFOP, o CST e os tributos de IPI, ICMS, PIS/COFINS e IBS/CBS.
 8. Normalizar o produto de cada item em função, material, composição, uso, apresentação e termos técnicos, preservando o texto original.
 9. Detectar lacunas, ambiguidades e conflitos entre descrição, XML do item e anexos.
-10. Interromper e pedir o dado essencial ausente, sem classificar e sem bloquear enquanto composição, função ou apresentação forem insuficientes.
+10. Interromper e pedir o dado essencial ausente na entrada de texto livre, sem classificar e sem bloquear enquanto composição, função ou apresentação forem insuficientes. Quando o item vier de um documento que já traz a descrição do produto, como a NF-e, essa descrição **DEVE** ser classificada diretamente; as salvaguardas seguintes continuam valendo (ordem de autoridade, empate sem vencedor inventado e ausência de evidência declarada como limitação).
 11. Fixar, para cada item, a vigência, a UF, o regime, a origem, o destino e o tipo de operação.
 12. Consultar por MCP os chunks do manual e das bases de NCM, notas, Regras Gerais de Interpretação, IPI, ICMS, CEST, PIS/COFINS e IBS/CBS na vigência definida.
 13. Recuperar casos corporativos semelhantes e a documentação técnica associada, com fonte e desfecho.
@@ -412,6 +412,14 @@ A revisão de conformidade com esta constituição **DEVE** ocorrer em todo pull
 - Processamento síncrono: `tasks/get` recupera a tarefa concluída por id; `tasks/cancel` responde erro A2A de tarefa não cancelável. A Api.Agente continua sem orquestrar outros agentes.
 - Impacto: a specification `004` e seu contrato OpenAPI são atualizados. As specifications `001`, `002` e `003` permanecem. A análise REST não é substituída pelo A2A.
 - Responsável: mantenedor do produto, a pedido do aluno, para rodar a skill do treinamento.
+
+#### 1.0.9 — 2026-11-11
+
+- Leitura de NF-e (xmlNfe) implementada: a Api.Agente extrai um item por produto, com a descrição (xProd) e o declarado (NCM, CFOP, CEST), e confere pela mesma análise. A etapa 10 passa a classificar diretamente a descrição que vem do documento, mantendo as salvaguardas de autoridade, empate e limitação. A entrada de texto livre continua exigindo função, composição e apresentação.
+- A Api.RAG ganha `DELETE /v1/documentos?origem=...`, protegido pela chave de ingestão, para substituir uma base de referência (recarga da NCM), conforme a seção 7 já previa a substituição da versão anterior.
+- Carga da NCM enriquecida com a hierarquia (capítulo, posição, subposições e folha) no conteúdo do chunk, para a busca vetorial distinguir o código correto. É dado operacional, não princípio.
+- Impacto: a specification `001` (FR-007 e leitura de arquivo) e a `003` (remoção por origem) são atualizadas. As demais permanecem. Nenhum layout, alíquota ou regra fiscal foi inventado.
+- Responsável: mantenedor do produto, a pedido do aluno, para conferir NF-e e melhorar a recuperação de NCM.
 
 ## 9. Decisões pendentes
 

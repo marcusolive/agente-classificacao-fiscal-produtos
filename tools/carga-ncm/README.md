@@ -21,8 +21,23 @@ Cada registro da NCM vira um documento da faixa de maior autoridade (`legislacao
 | `vigenciaInicial` | `Data_Inicio` do registro |
 | `vigenciaFinal` | `Data_Fim`, ou vazio quando `31/12/9999` (intervalo aberto) |
 | `formato` | `texto` |
-| `conteudo` | `"<Codigo> — <Descricao>"` |
+| `conteudo` | `"<Codigo> — <caminho hierárquico>"` (capítulo > posição > subposições > folha) |
 | `ncm` | o código |
+
+### Hierarquia no conteúdo
+
+A tabela do Classif traz todos os níveis (capítulo de 2 dígitos, posição de 4, subposições
+de 5/6/7 e item de 8). O carregador monta o `conteudo` do item de 8 dígitos com o caminho
+inteiro, não só a folha. Exemplo para `0901.21.00`:
+
+```
+0901.21.00 — Café, chá, mate e especiarias. > Café, mesmo torrado ou descafeinado;
+cascas e películas de café; sucedâneos do café... > Café torrado > Não descafeinado
+```
+
+Sem a hierarquia, a folha seria apenas `-- Não descafeinado`, que embarca mal na busca
+vetorial e empata com vizinhos errados (café solúvel, chás). Com o caminho completo, o
+código certo sobe nos candidatos.
 
 ## Pré-requisitos
 
@@ -78,6 +93,16 @@ $env:INGESTAO_CHAVE = 'ingestao-local'
 - Quando a NCM mudar na fonte, baixe o novo JSON, aponte `-Arquivo` para ele e rode
   de novo: códigos iguais ficam `ignorado`; descrições alteradas sob a **mesma**
   `versao` são **recusadas** (exigem versão nova) — confira o resumo ao final.
+- Para **recarregar** a base com um conteúdo novo sob a mesma versão (ex.: a melhoria
+  de hierarquia acima), primeiro apague a origem e rode o carregador de novo:
+
+  ```powershell
+  # Remove todas as versões da origem (destrutivo, limitado à origem):
+  Invoke-RestMethod -Method Delete -Uri 'http://localhost:5120/v1/documentos?origem=Classif/Siscomex' `
+      -Headers @{ 'X-Chave-Ingestao' = $env:INGESTAO_CHAVE }
+  # Depois recarregue:
+  ./Invoke-CargaNcm.ps1 -BaseUrl http://localhost:5120 -SomenteOitoDigitos
+  ```
 
 ## Decisões em aberto que afetam a qualidade
 

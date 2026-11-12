@@ -80,6 +80,19 @@ vai para revisão humana em vez de escolher um vencedor inventado.
 O agente nunca cria código, alíquota, dispositivo legal ou referência. Se não houver
 evidência suficiente, ele declara a limitação e não escolhe um candidato.
 
+## Conferindo uma NF-e
+
+Além da descrição em texto, a Api.Agente lê um XML de NF-e enviado em Base64 e extrai
+um item por produto, com a descrição do produto e o que foi declarado (NCM, CFOP, CEST).
+Cada item segue a mesma análise: a descrição é classificada, a NCM sugerida é comparada
+com a declarada e, quando a declaração não se sustenta na evidência, o item fica
+divergente e a nota é bloqueada.
+
+A leitura usa a descrição do próprio documento, então não exige o formato de atributos
+(função, composição, apresentação) que a entrada de texto livre pede. As demais
+salvaguardas continuam: ordem de autoridade, empate sem vencedor inventado e ausência de
+evidência declarada como limitação.
+
 ## Integração com a SOFIA (A2A)
 
 A Api.Agente publica um Agent Card e atende chamadas A2A no perfil JSON-RPC 0.3.0.
@@ -206,9 +219,15 @@ está em [docs/publicacao-checklist.md](docs/publicacao-checklist.md).
 ## Carregando a tabela NCM
 
 A pasta [tools/carga-ncm/](tools/carga-ncm/) tem um script que lê a tabela NCM oficial e
-a ingere na Api.RAG, um documento por código, pela rota de administração. Ele é
-idempotente: rodar de novo não duplica nada. Veja o
-[README do carregador](tools/carga-ncm/README.md) para os parâmetros e exemplos.
+a ingere na Api.RAG, um documento por código, pela rota de administração. O conteúdo de
+cada código carrega a hierarquia completa (capítulo, posição, subposições e folha), para
+a busca vetorial distinguir o código certo em vez de casar apenas pela folha. Ele é
+idempotente: rodar de novo não duplica nada.
+
+Para recarregar a base com um conteúdo novo, primeiro remova a origem pela rota de
+administração (`DELETE /v1/documentos?origem=Classif/Siscomex`, com a chave de ingestão) e
+rode o carregador de novo. Veja o [README do carregador](tools/carga-ncm/README.md) para
+os parâmetros e exemplos.
 
 ## Governança
 
